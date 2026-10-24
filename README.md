@@ -1,0 +1,3 @@
+# DegreePath
+
+Welcome to DegreePath!
