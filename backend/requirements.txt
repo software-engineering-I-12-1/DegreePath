@@ -1,0 +1,20 @@
+# Core Framework & API
+Django>=5.0,<6.0
+djangorestframework>=3.15.0
+django-cors-headers>=4.3.1
+whitenoise[brotli]>=6.6.0
+
+# Database & Environment
+dj-database-url>=2.1.0
+psycopg2-binary>=2.9.9
+python-dotenv>=1.0.1
+
+# Security & Password Hashing (NFR-2)
+argon2-cffi>=23.1.0
+
+# WSGI Server for Production
+gunicorn>=21.2.0
+
+# Constraint Satisfaction & Graph Algorithms (ADR-03 & ADR-04)
+ortools>=9.9.3963
+networkx>=3.2.1
