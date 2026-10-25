@@ -38,6 +38,9 @@ export function App() {
         <p className="subtitle">
           Automated, Constraint-Aware Academic Planning for NYU Computer Science
         </p>
+        <p style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: '#10b981', fontWeight: 600 }}>
+          🚀 Live Deployment Active · Automated CI/CD via GitHub Actions
+        </p>
       </header>
 
       <div className="status-card">
