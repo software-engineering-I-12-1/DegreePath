@@ -1,8 +1,10 @@
 export class ApiError extends Error {
   status: number;
-  constructor(status: number, message: string) {
+  errors: Record<string, string>;
+  constructor(status: number, message: string, errors: Record<string, string> = {}) {
     super(message);
     this.status = status;
+    this.errors = errors;
   }
 }
 
@@ -42,7 +44,7 @@ export async function apiFetch<T>(path: string, options: Options = {}): Promise<
 
   if (res.status === 204) return null;
 
-  let data: { error?: string; detail?: string } | null = null;
+  let data: { error?: string; detail?: string; errors?: Record<string, string> } | null = null;
   try {
     data = await res.json();
   } catch {
@@ -50,7 +52,11 @@ export async function apiFetch<T>(path: string, options: Options = {}): Promise<
   }
 
   if (!res.ok) {
-    throw new ApiError(res.status, data?.error ?? data?.detail ?? `Request failed (${res.status})`);
+    throw new ApiError(
+      res.status,
+      data?.error ?? data?.detail ?? `Request failed (${res.status})`,
+      data?.errors ?? {},
+    );
   }
   return data as T;
 }
