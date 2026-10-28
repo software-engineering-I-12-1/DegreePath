@@ -52,6 +52,7 @@ INSTALLED_APPS = [
 
     # Local application modules
     'core',
+    'catalog',
 ]
 
 MIDDLEWARE = [
