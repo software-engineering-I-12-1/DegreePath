@@ -1,92 +1,76 @@
-import { useState, useEffect } from 'react';
-import '../App.css';
-
-interface HealthResponse {
-  status: string;
-  app: string;
-  version: string;
-  database: string;
-}
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
+import Logo from '../components/Logo';
 
 export function Home() {
-  const [health, setHealth] = useState<HealthResponse | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+  const [backend, setBackend] = useState<'checking' | 'ok' | 'bad'>('checking');
 
   useEffect(() => {
     fetch('/api/health/')
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        return res.json();
-      })
-      .then((data: HealthResponse) => {
-        setHealth(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
+      .then((res) => setBackend(res.ok ? 'ok' : 'bad'))
+      .catch(() => setBackend('bad'));
   }, []);
 
   return (
-    <div className="container">
-      <header className="header">
-        <h1 className="title">🎓 DegreePath</h1>
-        <p className="subtitle">
-          Automated, Constraint-Aware Academic Planning for NYU Computer Science
+    <>
+      <section className="hero">
+        <div className="hero-logo">
+          <Logo size={72} showText={false} />
+        </div>
+        <h1>
+          Plan your degree. <span>Semester by semester.</span>
+        </h1>
+        <p>
+          DegreePath builds a valid, constraint-aware course roadmap for NYU Computer Science
+          students, and explains exactly why when a plan can't work.
         </p>
-        <p style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: '#10b981', fontWeight: 600 }}>
-          🚀 Live Deployment Active · Automated CI/CD via GitHub Actions
-        </p>
-      </header>
+        <div className="hero-actions">
+          {user ? (
+            <>
+              <Link to="/profile" className="btn">Go to my profile</Link>
+              <Link to="/plans" className="btn btn-secondary">My plans</Link>
+            </>
+          ) : (
+            <>
+              <Link to="/register" className="btn">Get started</Link>
+              <Link to="/signin" className="btn btn-secondary">Sign in</Link>
+            </>
+          )}
+        </div>
+      </section>
 
-      <div className="status-card">
-        <h2>Backend Connection Status</h2>
-        {loading && (
-          <span className="status-badge loading">Checking backend health...</span>
-        )}
-        {error && (
-          <div>
-            <span className="status-badge error">Backend Unreachable</span>
-            <p style={{ marginTop: '0.75rem', fontSize: '0.9rem', color: '#dc2626' }}>
-              {error}
-            </p>
-          </div>
-        )}
-        {health && (
-          <div>
-            <span className="status-badge healthy">● Connected ({health.status})</span>
-            <p style={{ marginTop: '0.75rem', fontSize: '0.9rem' }}>
-              App: <strong>{health.app}</strong> | Version: <strong>{health.version}</strong> | Database: <strong>{health.database}</strong>
-            </p>
-          </div>
-        )}
-      </div>
-
-      <div className="cards-grid">
-        <div className="feature-card">
+      <section className="features">
+        <div className="feature">
           <h3>Constraint-Based Planning</h3>
           <p>
-            Powered by Google OR-Tools CP-SAT solving prerequisites, corequisites, seasonal term offerings, and credit limits.
+            Prerequisites, corequisites, seasonal offerings, credit limits and elective pools, solved
+            together with Google OR-Tools CP-SAT.
           </p>
         </div>
-        <div className="feature-card">
+        <div className="feature">
           <h3>Conflict Explanation</h3>
           <p>
-            Isolates minimal conflict cores (US-12) to explain why a roadmap is infeasible and suggest actionable remedies.
+            When graduation on time is impossible, DegreePath pinpoints the smallest set of
+            conflicting constraints in plain language.
           </p>
         </div>
-        <div className="feature-card">
+        <div className="feature">
           <h3>Independent Validator</h3>
           <p>
-            Guarantees 100% plan validity by double-checking schedules before persistence (NFR-4).
+            Every plan is double-checked by a separate validator before you see it, so what you get
+            is always valid.
           </p>
         </div>
-      </div>
-    </div>
+      </section>
+
+      <footer className="site-footer">
+        <span className={`status-dot ${backend === 'checking' ? '' : backend}`} />
+        {backend === 'ok' ? 'Backend online' : backend === 'bad' ? 'Backend unreachable' : 'Checking backend…'}
+        {' · '}NYU Tandon · CS-GY 6063
+      </footer>
+    </>
   );
 }
 
