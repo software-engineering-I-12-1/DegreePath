@@ -52,6 +52,9 @@ INSTALLED_APPS = [
 
     # Local application modules
     'core',
+
+    'accounts',
+    'profiles', 
 ]
 
 MIDDLEWARE = [
@@ -189,7 +192,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
+        'accounts.authentication.Session401Authentication', 
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
