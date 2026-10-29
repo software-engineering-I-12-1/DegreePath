@@ -52,9 +52,9 @@ INSTALLED_APPS = [
 
     # Local application modules
     'core',
-
     'accounts',
-    'profiles', 
+    'profiles',
+    'catalog',
 ]
 
 MIDDLEWARE = [
