@@ -16,6 +16,7 @@ export default function NavBar() {
         <>
           <Link to="/profile">Profile</Link>
           <Link to="/plans">Plans</Link>
+          {user.is_staff && <Link to="/catalog/import">Import catalog</Link>}
           <button
             onClick={async () => {
               await logout();

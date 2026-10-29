@@ -3,6 +3,7 @@ Catalog Service Layer.
 Manages transactional course import, prerequisite CNF persistence, and corequisite canonicalization (US-05, US-06).
 """
 
+import re
 from typing import List, Dict, Any, Optional, Set
 from django.db import transaction
 from django.db.models import F
@@ -81,7 +82,8 @@ def apply_corequisites_to_course(
 
 def import_course_catalog(
     course_data: List[Dict[str, Any]],
-    admin_user=None
+    admin_user=None,
+    first_row_number: int = 1,
 ) -> Dict[str, Any]:
     """
     Imports course catalog data in one atomic transaction (NFR-4).
@@ -96,58 +98,65 @@ def import_course_catalog(
     clean_rows = []
     seen_codes = set()
 
-    for idx, row in enumerate(course_data, start=1):
-        code = str(row.get('code', '')).strip().upper()
-        title = str(row.get('title', '')).strip()
-        raw_credits = row.get('credits')
+    if not course_data:
+        errors.append({'row': first_row_number, 'column': 'file', 'message': 'The file contains no courses'})
 
+    for idx, row in enumerate(course_data, start=first_row_number):
+        if not isinstance(row, dict):
+            errors.append({'row': idx, 'column': 'row', 'message': 'Each course must be an object'})
+            continue
+
+        row_errors = []
+        raw_code = row.get('code')
+        code = re.sub(r'\s+', ' ', raw_code.strip()).upper() if isinstance(raw_code, str) else ''
+        raw_title = row.get('title')
+        title = raw_title.strip() if isinstance(raw_title, str) else ''
         if not code:
-            errors.append({'row': idx, 'column': 'code', 'message': 'Course code is required'})
-            continue
+            row_errors.append({'row': idx, 'column': 'code', 'message': 'Course code is required'})
+        elif code in seen_codes:
+            row_errors.append({'row': idx, 'column': 'code', 'value': code, 'message': f'Duplicate course code {code} in file'})
         if not title:
-            errors.append({'row': idx, 'column': 'title', 'message': 'Course title is required'})
-            continue
+            row_errors.append({'row': idx, 'column': 'title', 'message': 'Course title is required'})
 
-        # Numeric credits check (US-05 AC2)
-        try:
+        raw_credits = row.get('credits')
+        if isinstance(raw_credits, bool) or not (
+            isinstance(raw_credits, int) or
+            (isinstance(raw_credits, str) and raw_credits.strip().isdigit())
+        ):
+            credits = None
+        else:
             credits = int(raw_credits)
-            if credits <= 0 or credits > 24:
-                raise ValueError()
-        except (ValueError, TypeError):
-            errors.append({
-                'row': idx,
-                'column': 'credits',
-                'value': raw_credits,
-                'message': f"Credits must be a positive integer between 1 and 24, got '{raw_credits}'"
+        if credits is None or not 1 <= credits <= 24:
+            row_errors.append({
+                'row': idx, 'column': 'credits', 'value': raw_credits,
+                'message': f"Credits must be a whole number from 1 to 24; got '{raw_credits}'",
             })
-            continue
 
-        # Season offerings check (US-05 AC5)
-        raw_offerings = row.get('offerings', ['Fall', 'Spring'])
+        raw_offerings = row.get('offerings')
         if isinstance(raw_offerings, str):
-            raw_offerings = [s.strip() for s in raw_offerings.split(',') if s.strip()]
-        
+            raw_offerings = [part.strip() for part in raw_offerings.split(',')]
+        if not isinstance(raw_offerings, list) or not raw_offerings:
+            raw_offerings = [raw_offerings]
         valid_seasons = []
-        for s in raw_offerings:
-            s_clean = s.capitalize()
-            if s_clean not in ('Fall', 'Spring'):
-                errors.append({
-                    'row': idx,
-                    'column': 'offerings',
-                    'value': s,
-                    'message': f"Invalid term-offering season '{s}'. Must be 'Fall' or 'Spring'"
+        for season in raw_offerings:
+            clean = season.strip().capitalize() if isinstance(season, str) else ''
+            if clean not in ('Fall', 'Spring'):
+                row_errors.append({
+                    'row': idx, 'column': 'offerings', 'value': season,
+                    'message': f"Invalid term-offering value '{season}'; use Fall or Spring",
                 })
             else:
-                valid_seasons.append(s_clean)
+                valid_seasons.append(clean)
 
+        errors.extend(row_errors)
+        if row_errors:
+            continue
         seen_codes.add(code)
         clean_rows.append({
-            'code': code,
-            'title': title,
-            'credits': credits,
+            'code': code, 'title': title, 'credits': credits,
             'offerings': set(valid_seasons),
-            'prerequisites': row.get('prerequisites', ''),
-            'corequisites': row.get('corequisites', []),
+            'prerequisites': row.get('prerequisites'),
+            'corequisites': row.get('corequisites'),
         })
 
     if errors:
@@ -192,6 +201,8 @@ def import_course_catalog(
             # 2. Ingest prerequisites in CNF (US-06 AC1, AC3, AC4)
             for item in clean_rows:
                 course = courses_by_code[item['code']]
+                if item['prerequisites'] is None:
+                    continue
                 apply_prerequisites_to_course(
                     course=course,
                     prereq_text=item['prerequisites'],
@@ -203,6 +214,8 @@ def import_course_catalog(
             for item in clean_rows:
                 course = courses_by_code[item['code']]
                 coreqs = item['corequisites']
+                if coreqs is None:
+                    continue
                 if isinstance(coreqs, str):
                     coreqs = [c.strip() for c in coreqs.split(',') if c.strip()]
                 apply_corequisites_to_course(

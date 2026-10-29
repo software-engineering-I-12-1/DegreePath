@@ -57,6 +57,8 @@ INSTALLED_APPS = [
     'catalog',
 ]
 
+AUTH_USER_MODEL = 'accounts.User'
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Serves compiled React assets

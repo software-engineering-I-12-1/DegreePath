@@ -14,7 +14,7 @@ User = get_user_model()
 
 MIN_PASSWORD_LENGTH = 8
 MAX_PASSWORD_LENGTH = 128
-MAX_EMAIL_LENGTH = 150  # Django's username field limit
+MAX_EMAIL_LENGTH = 254
 
 
 def _field(request, name):
@@ -24,7 +24,7 @@ def _field(request, name):
 
 
 def _user_payload(user):
-    return {'id': user.pk, 'email': user.email}
+    return {'id': user.pk, 'email': user.email, 'is_staff': user.is_staff}
 
 
 def _error(message, code):
@@ -51,12 +51,12 @@ class RegisterView(APIView):
         if len(password) > MAX_PASSWORD_LENGTH:
             return _error('Password must be at most 128 characters', status.HTTP_400_BAD_REQUEST)
 
-        if User.objects.filter(username=email).exists():
+        if User.objects.filter(email__iexact=email).exists():
             return _error('Email already registered', status.HTTP_409_CONFLICT)
 
         try:
             with transaction.atomic():
-                user = User.objects.create_user(username=email, email=email, password=password)
+                user = User.objects.create_user(email=email, password=password)
         except IntegrityError:  # two simultaneous registrations
             return _error('Email already registered', status.HTTP_409_CONFLICT)
 
@@ -72,7 +72,7 @@ class LoginView(APIView):
         email = _field(request, 'email').strip().lower()
         password = _field(request, 'password')
 
-        user = authenticate(request, username=email, password=password)
+        user = authenticate(request, email=email, password=password)
         if user is None:
             return _error('Incorrect email or password', status.HTTP_401_UNAUTHORIZED)
 

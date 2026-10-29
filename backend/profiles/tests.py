@@ -2,6 +2,7 @@ from datetime import date
 from unittest.mock import patch
 
 from rest_framework.test import APIClient, APITestCase
+from catalog.models import Course
 
 from .models import Profile
 
@@ -23,6 +24,8 @@ class ProfileTests(APITestCase):
         patcher = patch('profiles.terms.today', return_value=date(2026, 10, 27))
         patcher.start()
         self.addCleanup(patcher.stop)
+        Course.objects.create(code='CS-UY 1134', title='Data Structures and Algorithms', credits=4)
+        Course.objects.create(code='MA-UY 1024', title='Calculus II', credits=4)
 
     def signup(self, email='maitri@nyu.edu'):
         client = APIClient()
