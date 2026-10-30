@@ -22,7 +22,7 @@ def index_fallback(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('accounts.urls')),
-     path('api/profile/', include('profiles.urls')),
+    path('api/profile/', include('profiles.urls')),
     path('api/', include('core.urls')),
     path('api/', include('catalog.urls')),
     # Catch-all for React SPA frontend routing
