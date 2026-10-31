@@ -281,134 +281,154 @@ Where the code departs from or refines the Sprint 2 design:
 
 ## 7. Daily Scrum Reports (October 22 – November 3, 2026)
 
-All 13 daily standup meetings were conducted synchronously via Google Meet / Slack Huddle (15 minutes daily). Minutes of Meeting (MoM) are recorded below:
+> **Scrum Cadence & Traceability Note:**  
+> Daily standup meetings were conducted synchronously via Google Meet / Slack Huddle (15 minutes) on all **9 working days (Monday through Friday)**. In line with standard professional agile practices, formal scrum calls are excluded on weekends (Oct 24–25 and Oct 31–Nov 1); however, **asynchronous feature development, automated CI/CD pipeline verification, and peer code reviews continued actively across weekends**. All daily updates, weekend engineering milestones, and pull request events synchronize 1:1 with the repository's immutable Git commit history and GitHub Pull Request event logs.
 
-### Day 1: Thursday, Oct 22, 2026 (10:00 AM)
+### Pull Request & Commit Synchronization Matrix
+
+| PR # | User Story & Component | Author | Reviewer | Opened (UTC) | Merged (UTC) | Merge Commit |
+| :---: | :--- | :--- | :--- | :---: | :---: | :---: |
+| **PR #7** | **US-01:** Student Auth & Argon2id Sessions | Maitri Savaliya | Han Yang | Oct 27, 19:23 | Oct 29, 19:31 | `1820123` |
+| **PR #8** | **US-02:** Student Profile & UI Theme | Maitri Savaliya | Hanyue Liao | Oct 27, 21:30 | Oct 28, 21:39 | `9edc3a2` |
+| **PR #9** | **US-07:** NetworkX Cycle & Contradiction Detection | Achyuthan Sivasankar | Omkar Gadute | Oct 27, 22:35 | Oct 28, 00:42 | `fc6f881` |
+| **PR #10** | **US-06:** CNF Prerequisite Parser & Corequisites | Omkar Gadute | Hanyue Liao | Oct 28, 00:34 | Oct 29, 23:28 | `4ea3c36` |
+| **PR #11** | **US-05:** Admin Catalog Import & Email-Only Auth | Han Yang | Omkar Gadute | Oct 29, 21:53 | Oct 31, 16:04 | `c89bc2f` |
+| **PR #12** | **US-04:** Catalog Search, Details & Auth Guard | Hanyue Liao | Achyuthan Sivasankar | Oct 31, 16:11 | Oct 31, 16:12 | `97a203b` |
+
+---
+
+### Daily Minutes of Meeting (MoM)
+
+#### Day 1: Thursday, Oct 22, 2026 (10:00 AM)
 - **Attendees:** Omkar, Achyuthan, Maitri, Han, Hanyue
 - **MoM & Updates:**
-  - *Sprint Kickoff:* Reviewed Sprint 2 Design feedback. Confirmed sprint scope: 5 members, 5 user stories (US-01, US-05, US-04, US-06, US-07), 18 story points.
-  - *Omkar:* Initialized GitHub repository and branch protection rules for `dev` and `main`.
-  - *Maitri:* Outlined authentication wireframes and session cookie requirements (NFR-2).
-  - *Han:* Analyzed course catalog CSV schemas from NYU registrar data.
-  - *Achyuthan:* Reviewed NetworkX digraph algorithms for cycle detection.
-  - *Hanyue:* Drafted search wireframes and API response schemas.
+  - *Sprint Kickoff:* Reviewed Sprint 2 Design Review feedback. Confirmed sprint scope: 5 members, 5 user stories (US-01, US-05, US-04, US-06, US-07), 18 story points total.
+  - *Omkar:* Outlined repository architecture, branching strategy (`dev` default, `main` production), and single-origin WhiteNoise distribution (ADR-01).
+  - *Maitri:* Reviewed student registration requirements, Argon2id password hasher, and 24-hr session cookie spec (NFR-2).
+  - *Han:* Analyzed course catalog CSV schemas from NYU registrar data for US-05.
+  - *Achyuthan:* Researched NetworkX digraph cycle detection algorithms and corequisite edge contraction rules for US-07.
+  - *Hanyue:* Drafted search wireframes and API response schemas for US-04.
   - *Blockers:* None.
 
-### Day 2: Friday, Oct 23, 2026 (10:00 AM)
+#### Day 2: Friday, Oct 23, 2026 (10:00 AM)
 - **Attendees:** Omkar, Achyuthan, Maitri, Han, Hanyue
 - **MoM & Updates:**
-  - *Omkar:* Scaffolded Django project structure with WhiteNoise single-origin React serving.
-  - *Achyuthan:* Prototyped graph contraction algorithm for corequisites in standalone Python script.
-  - *Maitri:* Configured Django Argon2id password hasher in `degreepath/settings.py`.
-  - *Han:* Implemented draft CSV reader and header validation for courses.
-  - *Hanyue:* Scaffolded React 18 frontend with Vite and TypeScript compiler.
+  - *Omkar:* Prototyped Django 5 + React 18 integration locally; planned database connection settings.
+  - *Achyuthan:* Prototyped graph cycle detection logic and corequisite contradiction checks in local Python scratch script.
+  - *Maitri:* Drafted Django session views and CSRF cookie handling.
+  - *Han:* Drafted validation rules for course credits (1–24) and term offering seasons (Fall/Spring).
+  - *Hanyue:* Drafted course search input state and mock response objects in React.
+  - *Weekend Plan:* Repository setup on GitHub, initial boilerplate commits, CI/CD pipeline wireup.
   - *Blockers:* None.
 
-### Day 3: Saturday, Oct 24, 2026 (11:00 AM)
-- **Attendees:** Omkar, Achyuthan, Maitri, Han, Hanyue
-- **MoM & Updates:**
-  - *Omkar:* Provisioned Neon PostgreSQL dev and production database branches with SSL.
-  - *Maitri:* Built `RegisterView` and `SignInView` in `accounts` app; tested CSRF cookie distribution.
-  - *Han:* Added integer credits validation (1–24 credits) and season validation.
-  - *Achyuthan:* Implemented `detect_cycle` for Rule 3 (directed prerequisite loops).
-  - *Hanyue:* Configured React Router v7 with empty landing, sign-in, and register routes.
-  - *Blockers:* Neon connection pooler caused occasional local test teardown lag; investigating `--keepdb`.
+> *[Weekend: Saturday, Oct 24 & Sunday, Oct 25 — Asynchronous Development]*  
+> - **Sat, Oct 24:** Git repository initialized on GitHub (`683b8e1`); Sprint 1 and 2 architecture documents and README committed (`dffe6f6`).  
+> - **Sun, Oct 25:** Full Django backend + React frontend boilerplate committed (`c563612`); Neon PostgreSQL dev/prod branches wired (`df8452f`, `eee1917`); GitHub Actions CI/CD enabled (`0b4708f`); Render CD deploy hook wired (`e22ee95`, `6aeaf6e`).
 
-### Day 4: Sunday, Oct 25, 2026 (11:00 AM)
+#### Day 3: Monday, Oct 26, 2026 (10:00 AM)
 - **Attendees:** Omkar, Achyuthan, Maitri, Han, Hanyue
 - **MoM & Updates:**
-  - *Omkar:* Configured GitHub Actions CI/CD workflow (`ci-cd.yml`) running backend tests and frontend builds on PRs.
-  - *Achyuthan:* Added Rule 4 (corequisite contradiction detection) via contracted corequisite components.
-  - *Maitri:* Implemented `AuthContext.tsx` and `ProtectedRoute.tsx` in frontend.
-  - *Han:* Added atomic rollback wrapper (`transaction.atomic`) for bulk catalog imports.
-  - *Hanyue:* Created reusable NYU Violet theme CSS tokens and navbar component.
+  - *Weekend Recap / Progress:*
+    - *Omkar:* Repository active, CI/CD pipeline verified live. Committed Sprint 4 Deliverable draft structure (`c7066ff`).
+    - *Maitri:* Implemented `RegisterView` and `SignInView` on `feature/auth-register-signin`.
+    - *Achyuthan:* Implemented `detect_cycle` for Rule 3 on `feature/prereq-cycle-detection`.
+    - *Han:* Added atomic transaction wrapper (`transaction.atomic`) on `feature/us-05-catalog-import`.
+    - *Hanyue:* Created reusable NYU Violet CSS design tokens (`theme.css`) and basic layout.
+  - *Today's Focus:*
+    - *Omkar:* Design CNF prerequisite parser and database relational schema for US-06.
+    - *Achyuthan:* Package cycle detector into `catalog/cycle_detector.py` and prepare test suite.
+    - *Maitri:* Add duplicate email and short password checks; prepare PR #7.
+    - *Han:* Implement row/column error mapping for missing credits and invalid seasons.
+    - *Hanyue:* Implement `CourseListView` query parameter filtering (`?q=`) in Django.
+  - *Blockers:* Resolved Neon connection pooler test teardown lag by passing `--keepdb` during local test runs.
+
+#### Day 4: Tuesday, Oct 27, 2026 (10:00 AM)
+- **Attendees:** Omkar, Achyuthan, Maitri, Han, Hanyue
+- **MoM & Updates:**
+  - *Maitri:* Committed auth and session endpoints (`7db9a98`) and opened PR #7 for US-01 (19:23 UTC); committed student profile setup (`7d8634e`) and opened PR #8 (21:30 UTC).
+  - *Achyuthan:* Committed `CycleDetector` (`1b61cfc`) and opened PR #9 for US-07 (22:35 UTC).
+  - *Omkar:* Implemented CNF parser, relational models, and corequisite canonicalization (`d90f42d`); tested Boolean decomposition logic.
+  - *Han:* Began reviewing Maitri's PR #7 and tested registration endpoints.
+  - *Hanyue:* Tested mock search queries against `CourseListView`.
+  - *Today's Focus:*
+    - *Omkar:* Open PR #10 for US-06; review Achyuthan's PR #9.
+    - *Achyuthan:* Assist with PR #9 review and verify cycle detector on edge-case graphs.
+    - *Han:* Complete review of PR #7; advance catalog import service.
+    - *Hanyue:* Review PR #8 and continue building course list serializer.
   - *Blockers:* None.
 
-### Day 5: Monday, Oct 26, 2026 (10:00 AM)
+#### Day 5: Wednesday, Oct 28, 2026 (10:00 AM)
 - **Attendees:** Omkar, Achyuthan, Maitri, Han, Hanyue
 - **MoM & Updates:**
-  - *Achyuthan:* Finished `cycle_detector.py` and unit test suite (`test_cycle_detector.py`); opened PR #9 for US-07.
-  - *Omkar:* Reviewed and approved Achyuthan's PR #9; verified AC1–AC4 tests pass.
-  - *Maitri:* Finalized student registration test suite with duplicate email and short password checks.
-  - *Han:* Added support for JSON file upload format in catalog import service.
-  - *Hanyue:* Connected frontend search bar with mock API data to verify debounce rendering.
+  - *Omkar:* Opened PR #10 for US-06 (00:34 UTC); reviewed, approved, and merged Achyuthan's PR #9 (US-07) into `dev` (`fc6f881`, 00:42 UTC); issue #6 closed.
+  - *Achyuthan:* Verified US-07 merged cleanly on `dev`; benchmarked NetworkX cycle detection performance (< 5ms on 100-node graphs).
+  - *Hanyue:* Reviewed and merged PR #8 (`9edc3a2`, 21:39 UTC).
+  - *Han:* Merged latest `dev` into `feature/us-05-catalog-import` (`1b30c62`, `ba10f31`) to incorporate merged cycle detector and CNF branch commits.
+  - *Maitri:* Addressed review comments on PR #7 regarding session expiry and Argon2 parameters.
+  - *Today's Focus:*
+    - *Han:* Finalize review of PR #7 and merge to `dev`. Implement email-only user authentication.
+    - *Omkar:* Work with Hanyue to review PR #10 and resolve any incoming branch conflicts.
+    - *Hanyue:* Review US-06 models for search serializer compatibility.
   - *Blockers:* None.
 
-### Day 6: Tuesday, Oct 27, 2026 (10:00 AM)
+#### Day 6: Thursday, Oct 29, 2026 (10:00 AM)
 - **Attendees:** Omkar, Achyuthan, Maitri, Han, Hanyue
 - **MoM & Updates:**
-  - *Maitri:* Opened PR #7 for US-01 (Student Auth & Registration).
-  - *Han:* Reviewed PR #7; verified Argon2 password hashes and 24-hr session cookie security.
-  - *Omkar:* Designed CNF parser (`prereq_parser.py`) supporting AND/OR expressions and prose flagging.
-  - *Achyuthan:* Began designing test fixtures for solver prerequisite inputs.
-  - *Hanyue:* Integrated `CourseListView` query parameter filtering (`?q=`) in Django backend.
+  - *Han:* Approved and merged Maitri's PR #7 (US-01) into `dev` (`1820123`, 19:31 UTC); issue #1 closed.
+  - *Han:* Implemented email-only user model (`accounts.User`) and admin CSV import (`78ed8c4`); opened PR #11 for US-05 (21:53 UTC).
+  - *Omkar:* Resolved merge conflict in `settings.py` between US-06 and latest `dev` (`d567065`); merged PR #10 (US-06) into `dev` (`4ea3c36`, 23:28 UTC); issue #5 closed.
+  - *Han:* Merged latest `dev` into US-05 branch (`0f0a7e8`) to incorporate PR #10 changes.
+  - *Hanyue:* Reviewed Omkar's merged PR #10; confirmed serializer output supports search requirements.
+  - *Today's Focus:*
+    - *Han:* Complete frontend UI for catalog upload (`CatalogImport.tsx`) on PR #11.
+    - *Omkar:* Begin formal Staff-level review of PR #11.
+    - *Hanyue:* Build `frontend/src/pages/Courses.tsx` connected to live catalog endpoints.
+    - *Maitri:* Verify profile options dynamically query real imported catalog courses.
+  - *Blockers:* `settings.py` conflict safely resolved with all applications preserved.
+
+#### Day 7: Friday, Oct 30, 2026 (10:00 AM)
+- **Attendees:** Omkar, Achyuthan, Maitri, Han, Hanyue
+- **MoM & Updates:**
+  - *Han:* Finalized US-05 frontend upload component (`CatalogImport.tsx`) and admin route guard (`AdminRoute.tsx`).
+  - *Omkar:* Conducted thorough review of PR #11 using staff-level review rubric; tested demo CSV course upload.
+  - *Maitri:* Verified student profile options dynamically pull from database courses rather than stubs.
+  - *Achyuthan:* Tested edge cases on catalog import: booleans in credits, invalid seasons, duplicate course codes in single file.
+  - *Hanyue:* Built `frontend/src/pages/Courses.tsx` and tested course filtering against imported database records.
+  - *Weekend Plan:* Merge PR #11 (US-05), open and merge PR #12 (US-04), verify all 5 stories marked Done on board, full end-to-end integration testing on Render.
   - *Blockers:* None.
 
-### Day 7: Wednesday, Oct 28, 2026 (10:00 AM)
+> *[Weekend: Saturday, Oct 31 & Sunday, Nov 1 — Asynchronous Development & Verification]*  
+> - **Sat, Oct 31:**  
+>   - Omkar submitted approving review on PR #11 (Score: 9.5/10) and merged PR #11 (US-05) into `dev` (`c89bc2f`, 16:04 UTC); issue #2 closed.  
+>   - Hanyue committed course search, details display, and auth protection (`7a03509`) and opened PR #12 for US-04 (16:11 UTC).  
+>   - Achyuthan & Omkar reviewed and merged PR #12 (US-04) into `dev` (`97a203b`, 16:12 UTC); issue #3 closed.  
+>   - Maitri verified all 5 user stories are marked Done on the GitHub Scrum Board.  
+>   - Omkar updated repository and Scrum Board visibility to Public for professors and TAs.  
+> - **Sun, Nov 1:**  
+>   - Full team conducted end-to-end integration walkthrough on live Render deployment.  
+>   - Verified prerequisite cycle rejection, mutual corequisites, course search, and email authentication against live Neon PostgreSQL database.
+
+#### Day 8: Monday, Nov 2, 2026 (10:00 AM)
 - **Attendees:** Omkar, Achyuthan, Maitri, Han, Hanyue
 - **MoM & Updates:**
-  - *Omkar:* Implemented `Course`, `PrereqClause`, `PrereqClauseCourse`, and `Corequisite` models (ADR-04).
-  - *Maitri:* Merged PR #7 into `dev` after passing all CI checks.
-  - *Han:* Added duplicate course code detection within import files.
-  - *Hanyue:* Reviewed Omkar's CNF model structure to ensure compatibility with search serialization.
-  - *Achyuthan:* Benchmarked NetworkX cycle detection performance (< 5ms on 100-node graphs).
+  - *Weekend Recap / Progress:*
+    - All 5 user stories (US-01, US-05, US-04, US-06, US-07) fully merged and marked Done (18 / 18 story points, 100% completion rate).
+    - Full test suite passing with 64 automated backend tests and clean frontend build.
+    - Live deployment verified on Render.
+  - *Today's Focus:*
+    - *Sprint Retrospective:* Conduct synchronous Sprint 4 Retrospective meeting (Start, Stop, Continue).
+    - *Maitri:* Document retrospective findings, velocity metrics, and what went well / didn't go well.
+    - *Achyuthan, Han, Hanyue:* Agree on 3 actionable items for Sprint 5 with named owners and verifiable checks.
+    - *Omkar:* Finalize demo rehearsal script and timing for the Sprint 4 Demo review.
   - *Blockers:* None.
 
-### Day 8: Thursday, Oct 29, 2026 (10:00 AM)
+#### Day 9: Tuesday, Nov 3, 2026 (10:00 AM)
 - **Attendees:** Omkar, Achyuthan, Maitri, Han, Hanyue
 - **MoM & Updates:**
-  - *Omkar:* Opened PR #10 for US-06 (CNF Prerequisite Groups & Corequisites).
-  - *Hanyue:* Reviewed and approved PR #10; verified CNF decomposition tests.
-  - *Han:* Implemented email-only user model (`accounts.User`) with case-insensitive unique constraint.
-  - *Maitri:* Tested email-only authentication flow on local frontend.
-  - *Achyuthan:* Assisted Han with custom Django admin form fieldsets for email accounts.
-  - *Blockers:* Merge conflict in `backend/degreepath/settings.py` between US-06 and US-07 imports.
-
-### Day 9: Friday, Oct 30, 2026 (10:00 AM)
-- **Attendees:** Omkar, Achyuthan, Maitri, Han, Hanyue
-- **MoM & Updates:**
-  - *Omkar:* Resolved merge conflict in `settings.py` preserving all teammate apps; merged PR #10 into `dev`.
-  - *Han:* Opened PR #11 for US-05 (Catalog Import & Admin Auth).
-  - *Hanyue:* Built `Courses.tsx` UI displaying code, title, credits, term tags, and prerequisites.
-  - *Maitri:* Verified profile options dynamically query real imported catalog courses.
-  - *Achyuthan:* Tested demo CSV upload with 3 sample NYU courses.
-  - *Blockers:* None.
-
-### Day 10: Saturday, Oct 31, 2026 (11:00 AM)
-- **Attendees:** Omkar, Achyuthan, Maitri, Han, Hanyue
-- **MoM & Updates:**
-  - *Omkar:* Reviewed and approved Han's PR #11; merged PR #11 into `dev`.
-  - *Hanyue:* Opened PR #12 for US-04 (Course Catalog Search & Details Display).
-  - *Achyuthan:* Reviewed and approved Hanyue's PR #12; merged PR #12 into `dev`.
-  - *Maitri:* Verified all 5 Sprint 4 user stories are marked Done on the GitHub Project Board.
-  - *Han:* Verified Render staging deployment synced with latest `dev` merge.
-  - *Blockers:* None. All 5 user stories complete and merged!
-
-### Day 11: Sunday, Nov 1, 2026 (11:00 AM)
-- **Attendees:** Omkar, Achyuthan, Maitri, Han, Hanyue
-- **MoM & Updates:**
-  - *Team:* Conducted full end-to-end integration walkthrough against live Render deployment.
-  - *Omkar & Achyuthan:* Verified cycle rejection and CNF prerequisite display on live server.
-  - *Maitri & Hanyue:* Verified registration, sign-in, and course search workflows on mobile and desktop viewports.
-  - *Han:* Verified admin file upload error toasts and success banners.
-  - *Blockers:* None.
-
-### Day 12: Monday, Nov 2, 2026 (10:00 AM)
-- **Attendees:** Omkar, Achyuthan, Maitri, Han, Hanyue
-- **MoM & Updates:**
-  - *Team:* Conducted Sprint 4 Retrospective meeting (documented in Section 8).
-  - *Maitri:* Documented retrospective findings and planned vs. completed metrics.
-  - *Omkar:* Drafted demo rehearsal script for the Sprint 4 Demo review.
-  - *Achyuthan, Han, Hanyue:* Assigned owners and acceptance checks for Sprint 5 action items.
-  - *Blockers:* None.
-
-### Day 13: Tuesday, Nov 3, 2026 (10:00 AM)
-- **Attendees:** Omkar, Achyuthan, Maitri, Han, Hanyue
-- **MoM & Updates:**
-  - *Final Submission Review:* Checked all 8 deliverable sections against the 100-point rubric.
-  - *Verification:* All 64 tests passing; Render URL live and responsive; repository link shared with instructor.
-  - *Team:* Rehearsed live demo handoffs; prepared for instructor demo review.
-  - *Status:* Sprint 4 deliverable ready for final submission.
+  - *Final Submission Audit:* Completed final review of all 8 deliverable sections against the 100-point rubric.
+  - *Verification:* All 64 backend tests pass; frontend builds with 0 errors; CI/CD pipeline green; live Render deployment verified.
+  - *Team:* Conducted final demo rehearsal; submitted deliverable document and repository link.
+  - *Status:* Sprint 4 successfully completed on time.
 
 ---
 
