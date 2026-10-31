@@ -9,6 +9,7 @@ import Profile from './pages/Profile';
 import Register from './pages/Register';
 import SignIn from './pages/SignIn';
 import CatalogImport from './pages/CatalogImport';
+import Courses from './pages/Courses';
 import './auth/auth.css';
 
 export function App() {
@@ -22,6 +23,7 @@ export function App() {
           <Route path="/register" element={<Register />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<Profile />} />
+            <Route path="/courses" element={<Courses />} />
             <Route path="/plans" element={<Plans />} />
             <Route path="/plans/:planId" element={<Plans />} />
           </Route>

@@ -14,6 +14,7 @@ export default function NavBar() {
       <span className="navbar-spacer" />
       {user ? (
         <>
+          <Link to="/courses">Courses</Link>
           <Link to="/profile">Profile</Link>
           <Link to="/plans">Plans</Link>
           {user.is_staff && <Link to="/catalog/import">Import catalog</Link>}
