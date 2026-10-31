@@ -12,6 +12,7 @@ import { apiFetch } from '../api';
 export interface User {
   id: number;
   email: string;
+  is_staff: boolean;
 }
 
 interface AuthContextValue {

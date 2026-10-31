@@ -1,10 +1,12 @@
 export class ApiError extends Error {
   status: number;
   errors: Record<string, string>;
-  constructor(status: number, message: string, errors: Record<string, string> = {}) {
+  details: { row?: number; column?: string; value?: unknown; message: string }[];
+  constructor(status: number, message: string, errors: Record<string, string> = {}, details: ApiError['details'] = []) {
     super(message);
     this.status = status;
     this.errors = errors;
+    this.details = details;
   }
 }
 
@@ -30,7 +32,7 @@ export async function apiFetch<T>(path: string, options: Options = {}): Promise<
 
   if (method !== 'GET') {
     await ensureCsrf();
-    headers['Content-Type'] = 'application/json';
+    if (!(options.body instanceof FormData)) headers['Content-Type'] = 'application/json';
     const token = getCookie('csrftoken');
     if (token) headers['X-CSRFToken'] = token;
   }
@@ -39,12 +41,12 @@ export async function apiFetch<T>(path: string, options: Options = {}): Promise<
     method,
     headers,
     credentials: 'same-origin',
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+    body: options.body instanceof FormData ? options.body : options.body !== undefined ? JSON.stringify(options.body) : undefined,
   });
 
   if (res.status === 204) return null;
 
-  let data: { error?: string; detail?: string; errors?: Record<string, string> } | null = null;
+  let data: { error?: string | { message: string; details?: ApiError['details'] }; detail?: string; errors?: Record<string, string> } | null = null;
   try {
     data = await res.json();
   } catch {
@@ -54,8 +56,9 @@ export async function apiFetch<T>(path: string, options: Options = {}): Promise<
   if (!res.ok) {
     throw new ApiError(
       res.status,
-      data?.error ?? data?.detail ?? `Request failed (${res.status})`,
+      typeof data?.error === 'string' ? data.error : data?.error?.message ?? data?.detail ?? `Request failed (${res.status})`,
       data?.errors ?? {},
+      typeof data?.error === 'object' ? data.error.details ?? [] : [],
     );
   }
   return data as T;

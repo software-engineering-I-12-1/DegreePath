@@ -1,6 +1,5 @@
-from django.test import TestCase
-
-# Create your tests here.
+from django.db import IntegrityError, transaction
+from django.test import override_settings
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient, APITestCase
 
@@ -26,6 +25,37 @@ class AuthTests(APITestCase):
         me = self.client.get(ME)
         self.assertEqual(me.status_code, 200)
         self.assertEqual(me.json()['email'], 'maitri@nyu.edu')
+
+    def test_email_is_the_only_login_identifier(self):
+        self.assertEqual(User.USERNAME_FIELD, 'email')
+        self.assertNotIn('username', [field.name for field in User._meta.fields])
+        self.register(email='Maitri@NYU.edu')
+        self.assertEqual(User.objects.get().email, 'maitri@nyu.edu')
+
+    def test_superuser_is_created_with_email_only(self):
+        admin = User.objects.create_superuser(email='admin@nyu.edu', password='password123')
+        self.assertTrue(admin.is_staff)
+        self.assertTrue(admin.is_superuser)
+        response = APIClient().post(LOGIN, {'email': 'admin@nyu.edu', 'password': 'password123'}, format='json')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['is_staff'])
+
+    @override_settings(STORAGES={
+        'staticfiles': {'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage'},
+    })
+    def test_admin_user_creation_form_asks_for_email(self):
+        admin = User.objects.create_superuser(email='admin@nyu.edu', password='password123')
+        self.client.force_login(admin)
+        response = self.client.get('/admin/accounts/user/add/')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="email"')
+        self.assertNotContains(response, 'name="username"')
+
+    def test_database_rejects_duplicate_email(self):
+        User.objects.create_user(email='admin@nyu.edu', password='password123')
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            # bulk_create bypasses User.save(), so the database constraint must catch this.
+            User.objects.bulk_create([User(email='ADMIN@NYU.EDU')])
 
     def test_register_rejects_short_password(self):
         res = self.register(password='short12')

@@ -168,6 +168,32 @@ flowchart LR
 
 ---
 
+## Local Setup
+
+Requires Python 3.11 and Node.js 20 or later. From the repository root, start the backend (Windows PowerShell):
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
+cd backend
+..\.venv\Scripts\python.exe manage.py migrate
+..\.venv\Scripts\python.exe manage.py runserver
+```
+
+From the repository root in a second terminal, start the frontend:
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+Open the URL printed by Vite. Students can register there; administrators can be created with `..\.venv\Scripts\python.exe manage.py createsuperuser` from `backend`. For a catalog demo, upload [demo_courses.csv](backend/catalog/demo_courses.csv) from the administrator's **Import catalog** page.
+
+To check the project, run `..\.venv\Scripts\python.exe manage.py test` from `backend` and `npm run build` from `frontend`.
+
+---
+
 ## Architectural Decision Records (ADRs)
 
 - **[ADR-01] React Frontend with Django Backend & Sessions:**

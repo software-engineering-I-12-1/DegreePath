@@ -52,10 +52,12 @@ INSTALLED_APPS = [
 
     # Local application modules
     'core',
-    'catalog',
     'accounts',
     'profiles',
+    'catalog',
 ]
+
+AUTH_USER_MODEL = 'accounts.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

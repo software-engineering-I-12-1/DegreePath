@@ -4,6 +4,7 @@ Verifies AC1 through AC4 and ADR-04 (Conjunctive Normal Form Tables).
 """
 
 from django.test import TestCase
+from django.contrib.auth import get_user_model
 from catalog.models import Course, CourseOffering, PrereqClause, PrereqClauseCourse, Corequisite, CatalogState
 from catalog.services import import_course_catalog, CatalogImportError
 from catalog.prereq_parser import parse_prerequisite_string, UnknownCourseError, PrereqParseError
@@ -12,6 +13,11 @@ from catalog.prereq_parser import parse_prerequisite_string, UnknownCourseError,
 class US06PrerequisiteAndCorequisiteTests(TestCase):
     def setUp(self):
         CatalogState.objects.get_or_create(id=1, defaults={'catalog_version': 1})
+        admin = get_user_model().objects.create_user(
+            email='catalog-admin@nyu.edu',
+            password='password123', is_staff=True,
+        )
+        self.client.force_login(admin)
 
     def test_ac1_cnf_and_or_prerequisite_structure(self):
         """
