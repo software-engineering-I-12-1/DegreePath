@@ -8,7 +8,7 @@ import json
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from django.db.models import Q
 from .models import Course
@@ -28,7 +28,7 @@ class CourseListView(APIView):
     Search catalog by course code or title (US-04).
     Query parameter: ?q={search_text}
     """
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         query = request.query_params.get('q', '').strip()
