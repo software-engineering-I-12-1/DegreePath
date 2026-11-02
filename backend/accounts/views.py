@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
@@ -7,6 +6,9 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from core.errors import api_error
+from profiles.models import Profile
 
 from .authentication import CSRFOnlyAuthentication
 
@@ -24,11 +26,13 @@ def _field(request, name):
 
 
 def _user_payload(user):
-    return {'id': user.pk, 'email': user.email, 'is_staff': user.is_staff}
-
-
-def _error(message, code):
-    return Response({'error': message}, status=code)
+    return {
+        'id': user.pk,
+        'user_id': user.pk,
+        'email': user.email,
+        'is_staff': user.is_staff,
+        'role': 'admin' if user.is_staff else 'student',
+    }
 
 
 class RegisterView(APIView):
@@ -44,24 +48,37 @@ class RegisterView(APIView):
             if len(email) > MAX_EMAIL_LENGTH:
                 raise ValidationError('too long')
         except ValidationError:
-            return _error('Enter a valid email address', status.HTTP_400_BAD_REQUEST)
+            return api_error(
+                'INVALID_EMAIL', 'Enter a valid email address', status.HTTP_400_BAD_REQUEST,
+                [{'field': 'email', 'message': 'Enter a valid email address'}],
+            )
 
         if len(password) < MIN_PASSWORD_LENGTH:
-            return _error('Password must be at least 8 characters', status.HTTP_400_BAD_REQUEST)
+            return api_error(
+                'PASSWORD_TOO_SHORT', 'Password must be at least 8 characters', status.HTTP_400_BAD_REQUEST,
+                [{'field': 'password', 'message': 'Password must be at least 8 characters'}],
+            )
         if len(password) > MAX_PASSWORD_LENGTH:
-            return _error('Password must be at most 128 characters', status.HTTP_400_BAD_REQUEST)
+            return api_error(
+                'VALIDATION_ERROR', 'Password must be at most 128 characters', status.HTTP_400_BAD_REQUEST,
+                [{'field': 'password', 'message': 'Password must be at most 128 characters'}],
+            )
 
         if User.objects.filter(email__iexact=email).exists():
-            return _error('Email already registered', status.HTTP_409_CONFLICT)
+            return api_error('EMAIL_TAKEN', 'Email already registered', status.HTTP_409_CONFLICT)
 
         try:
             with transaction.atomic():
                 user = User.objects.create_user(email=email, password=password)
+                profile = Profile.objects.create(user=user)  # empty StudentProfile (DR-12)
         except IntegrityError:  # two simultaneous registrations
-            return _error('Email already registered', status.HTTP_409_CONFLICT)
+            return api_error('EMAIL_TAKEN', 'Email already registered', status.HTTP_409_CONFLICT)
 
         login(request, user)
-        return Response(_user_payload(user), status=status.HTTP_201_CREATED)
+        return Response(
+            {**_user_payload(user), 'profile_id': str(profile.id)},
+            status=status.HTTP_201_CREATED,
+        )
 
 
 class LoginView(APIView):
@@ -74,7 +91,7 @@ class LoginView(APIView):
 
         user = authenticate(request, email=email, password=password)
         if user is None:
-            return _error('Incorrect email or password', status.HTTP_401_UNAUTHORIZED)
+            return api_error('INVALID_CREDENTIALS', 'Incorrect email or password', status.HTTP_401_UNAUTHORIZED)
 
         login(request, user)
         return Response(_user_payload(user))
@@ -93,4 +110,3 @@ class MeView(APIView):
 
     def get(self, request):
         return Response(_user_payload(request.user))
-# Create your views here.

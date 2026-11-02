@@ -1,13 +1,35 @@
+export interface ErrorDetail {
+  row?: number;
+  column?: string;
+  value?: unknown;
+  field?: string;
+  message: string;
+}
+
 export class ApiError extends Error {
   status: number;
+  code: string;
   errors: Record<string, string>;
-  details: { row?: number; column?: string; value?: unknown; message: string }[];
-  constructor(status: number, message: string, errors: Record<string, string> = {}, details: ApiError['details'] = []) {
+  details: ErrorDetail[];
+  constructor(
+    status: number,
+    message: string,
+    errors: Record<string, string> = {},
+    details: ErrorDetail[] = [],
+    code = '',
+  ) {
     super(message);
     this.status = status;
     this.errors = errors;
     this.details = details;
+    this.code = code;
   }
+}
+
+// Called on any 401 so the app can drop the signed-in user and route to /signin (design §5.1).
+let onUnauthorized: (() => void) | null = null;
+export function setUnauthorizedHandler(handler: (() => void) | null) {
+  onUnauthorized = handler;
 }
 
 function getCookie(name: string): string | null {
@@ -26,6 +48,12 @@ interface Options {
   body?: unknown;
 }
 
+interface ErrorBody {
+  error?: string | { code?: string; message?: string; details?: ErrorDetail[] };
+  detail?: string;
+  errors?: Record<string, string>;
+}
+
 export async function apiFetch<T>(path: string, options: Options = {}): Promise<T | null> {
   const method = options.method ?? 'GET';
   const headers: Record<string, string> = { Accept: 'application/json' };
@@ -41,12 +69,17 @@ export async function apiFetch<T>(path: string, options: Options = {}): Promise<
     method,
     headers,
     credentials: 'same-origin',
-    body: options.body instanceof FormData ? options.body : options.body !== undefined ? JSON.stringify(options.body) : undefined,
+    body:
+      options.body instanceof FormData
+        ? options.body
+        : options.body !== undefined
+          ? JSON.stringify(options.body)
+          : undefined,
   });
 
   if (res.status === 204) return null;
 
-  let data: { error?: string | { message: string; details?: ApiError['details'] }; detail?: string; errors?: Record<string, string> } | null = null;
+  let data: ErrorBody | null = null;
   try {
     data = await res.json();
   } catch {
@@ -54,12 +87,19 @@ export async function apiFetch<T>(path: string, options: Options = {}): Promise<
   }
 
   if (!res.ok) {
-    throw new ApiError(
-      res.status,
-      typeof data?.error === 'string' ? data.error : data?.error?.message ?? data?.detail ?? `Request failed (${res.status})`,
-      data?.errors ?? {},
-      typeof data?.error === 'object' ? data.error.details ?? [] : [],
-    );
+    if (res.status === 401) onUnauthorized?.();
+
+    const err = data && typeof data.error === 'object' && data.error !== null ? data.error : null;
+    const message =
+      typeof data?.error === 'string'
+        ? data.error
+        : err?.message ?? data?.detail ?? `Request failed (${res.status})`;
+    const details = err?.details ?? [];
+    const errors: Record<string, string> = { ...(data?.errors ?? {}) };
+    for (const d of details) {
+      if (d.field && !errors[d.field]) errors[d.field] = d.message;
+    }
+    throw new ApiError(res.status, message, errors, details, err?.code ?? '');
   }
   return data as T;
 }
