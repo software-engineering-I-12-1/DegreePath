@@ -26,13 +26,17 @@ def _field(request, name):
 
 
 def _user_payload(user):
-    return {
+    payload = {
         'id': user.pk,
         'user_id': user.pk,
         'email': user.email,
         'is_staff': user.is_staff,
         'role': 'admin' if user.is_staff else 'student',
     }
+    if not user.is_staff:
+        profile, _ = Profile.objects.get_or_create(user=user)
+        payload['profile_id'] = str(profile.id)
+    return payload
 
 
 class RegisterView(APIView):
@@ -70,15 +74,12 @@ class RegisterView(APIView):
         try:
             with transaction.atomic():
                 user = User.objects.create_user(email=email, password=password)
-                profile = Profile.objects.create(user=user)  # empty StudentProfile (DR-12)
+                Profile.objects.create(user=user)  # empty StudentProfile (DR-12)
         except IntegrityError:  # two simultaneous registrations
             return api_error('EMAIL_TAKEN', 'Email already registered', status.HTTP_409_CONFLICT)
 
         login(request, user)
-        return Response(
-            {**_user_payload(user), 'profile_id': str(profile.id)},
-            status=status.HTTP_201_CREATED,
-        )
+        return Response(_user_payload(user), status=status.HTTP_201_CREATED)
 
 
 class LoginView(APIView):

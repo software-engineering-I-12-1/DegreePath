@@ -193,6 +193,7 @@ CORS_ALLOW_CREDENTIALS = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'core.errors.custom_exception_handler',
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'accounts.authentication.Session401Authentication', 
     ],

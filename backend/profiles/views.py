@@ -11,6 +11,8 @@ from . import catalog, terms
 from .models import Profile
 from .validators import validate_profile
 
+import uuid
+
 
 def _serialize(profile):
     return {
@@ -30,6 +32,11 @@ def _own_profile(user):
     profile, _ = Profile.objects.get_or_create(user=user)
     return profile
 
+def _differs(field, old, new):
+    if field == 'completed_courses':
+        return set(old) != set(new)   # order doesn't matter
+    return old != new
+
 
 def _apply_update(request, profile):
     if not isinstance(request.data, dict):
@@ -48,6 +55,10 @@ def _apply_update(request, profile):
         return api_error(
             'VALIDATION_ERROR', 'Please fix the highlighted fields', status.HTTP_400_BAD_REQUEST, details,
         )
+
+    changed = any(_differs(f, getattr(profile, f), v) for f, v in cleaned.items())
+    if not changed:
+        return Response(_serialize(profile))  # nothing to save, so version and updated_at stay put
 
     with transaction.atomic():
         for field, value in cleaned.items():
@@ -76,6 +87,11 @@ class ProfileDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
     def _load(self, request, profile_id):
+        try:
+            uuid.UUID(str(profile_id))
+        except ValueError:
+            return None, api_error('NOT_FOUND', 'Profile not found', status.HTTP_404_NOT_FOUND)
+
         profile = Profile.objects.filter(pk=profile_id).first()
         if profile is None:
             return None, api_error('NOT_FOUND', 'Profile not found', status.HTTP_404_NOT_FOUND)

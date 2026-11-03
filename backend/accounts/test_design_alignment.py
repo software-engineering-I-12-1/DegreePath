@@ -59,3 +59,15 @@ class DesignAlignmentTests(APITestCase):
         User.objects.create_superuser(email='admin@nyu.edu', password='password123')
         res = APIClient().post(LOGIN, {'email': 'admin@nyu.edu', 'password': 'password123'}, format='json')
         self.assertEqual(res.json()['role'], 'admin')
+
+    def test_login_and_me_return_profile_id_for_students(self):
+        pid = self.register().json()['profile_id']
+        client = APIClient()
+        res = client.post(LOGIN, {'email': 'maitri@nyu.edu', 'password': 'password123'}, format='json')
+        self.assertEqual(res.json()['profile_id'], pid)
+        self.assertEqual(client.get('/api/auth/me/').json()['profile_id'], pid)
+
+    def test_admin_payload_has_no_profile_id(self):
+        User.objects.create_superuser(email='admin@nyu.edu', password='password123')
+        res = APIClient().post(LOGIN, {'email': 'admin@nyu.edu', 'password': 'password123'}, format='json')
+        self.assertNotIn('profile_id', res.json())

@@ -84,12 +84,25 @@ class ProfileTests(APITestCase):
         self.assertEqual(Profile.objects.count(), 1)
         self.assertEqual(client.get(ME).json()['credit_limit'], 12)
 
-    # profile_version (US-03 AC2)
-    def test_profile_version_increments_on_each_save(self):
+    def test_profile_version_bumps_only_when_a_field_changes(self):
         client = self.signup()
         self.assertEqual(client.put(ME, VALID, format='json').json()['profile_version'], 2)
-        self.assertEqual(client.put(ME, {**VALID, 'credit_limit': 12}, format='json').json()['profile_version'], 3)
 
+        # same data again: no bump
+        self.assertEqual(client.put(ME, VALID, format='json').json()['profile_version'], 2)
+
+        # same courses, different order and formatting: no bump
+        body = {**VALID, 'completed_courses': ['ma-uy 1024', 'CS-UY 1134']}
+        self.assertEqual(client.put(ME, body, format='json').json()['profile_version'], 2)
+
+        # real changes: bump each time
+        self.assertEqual(client.put(ME, {**VALID, 'credit_limit': 12}, format='json').json()['profile_version'], 3)
+        self.assertEqual(
+            client.put(ME, {**VALID, 'credit_limit': 12, 'target_term': 'Fall 2028'}, format='json').json()['profile_version'],
+            4,
+        )
+        body = {**VALID, 'credit_limit': 12, 'target_term': 'Fall 2028', 'completed_courses': ['CS-UY 1134']}
+        self.assertEqual(client.put(ME, body, format='json').json()['profile_version'], 5)
     def test_rejected_save_does_not_bump_version(self):
         client = self.signup()
         client.put(ME, {**VALID, 'credit_limit': 0}, format='json')
