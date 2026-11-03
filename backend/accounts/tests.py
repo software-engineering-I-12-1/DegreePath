@@ -73,13 +73,13 @@ class AuthTests(APITestCase):
         client = APIClient()
         res = client.post(LOGIN, {'email': 'maitri@nyu.edu', 'password': 'wrongpass1'}, format='json')
         self.assertEqual(res.status_code, 401)
-        self.assertEqual(res.json()['error'], 'Incorrect email or password')
+        self.assertEqual(res.json()['error']['message'], 'Incorrect email or password')
         self.assertNotIn('_auth_user_id', client.session)
 
     def test_unknown_email_gives_same_error(self):
         res = APIClient().post(LOGIN, {'email': 'nobody@nyu.edu', 'password': 'password123'}, format='json')
         self.assertEqual(res.status_code, 401)
-        self.assertEqual(res.json()['error'], 'Incorrect email or password')
+        self.assertEqual(res.json()['error']['message'], 'Incorrect email or password')
 
     def test_login_with_correct_password(self):
         self.register()
@@ -93,7 +93,7 @@ class AuthTests(APITestCase):
         self.register()
         res = self.register(client=APIClient(), email='MAITRI@nyu.edu')
         self.assertEqual(res.status_code, 409)
-        self.assertEqual(res.json()['error'], 'Email already registered')
+        self.assertEqual(res.json()['error']['message'], 'Email already registered')
         self.assertEqual(User.objects.count(), 1)
 
     # AC4 (backend half: anonymous gets 401; frontend does the redirect)

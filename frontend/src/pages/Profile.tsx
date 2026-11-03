@@ -8,6 +8,7 @@ interface ProfileData {
   credit_limit: number | null;
   target_term: string;
   completed_courses: string[];
+  ready: boolean;
 }
 
 interface Options {
@@ -51,12 +52,12 @@ export default function Profile() {
   }
 
   useEffect(() => {
-    Promise.all([apiFetch<ProfileData>('/api/profile/'), apiFetch<Options>('/api/profile/options/')])
+    Promise.all([apiFetch<ProfileData>('/api/profiles/me/'), apiFetch<Options>('/api/profiles/options/')])
       .then(([profile, opts]) => {
         if (opts) setOptions(opts);
         if (profile) {
           applyProfile(profile);
-          setEditing(profile.id === null); // saved profile -> show summary first
+          setEditing(!profile.ready); // saved profile -> show summary first
         }
       })
       .catch((err) => setFormError(err instanceof Error ? err.message : 'Could not load profile'))
@@ -94,7 +95,7 @@ export default function Profile() {
 
     setSaving(true);
     try {
-      const result = await apiFetch<ProfileData>('/api/profile/', {
+      const result = await apiFetch<ProfileData>('/api/profiles/me/', {
         method: 'PUT',
         body: {
           major,
@@ -251,7 +252,7 @@ export default function Profile() {
 
         <div className="form-actions">
           <button type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save profile'}</button>
-          {snapshot?.id && (
+          {snapshot?.ready && (
             <button type="button" onClick={cancelEdit} disabled={saving}>Cancel</button>
           )}
         </div>

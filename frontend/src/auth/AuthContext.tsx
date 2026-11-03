@@ -7,12 +7,15 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { apiFetch } from '../api';
+import { apiFetch, setUnauthorizedHandler } from '../api';
 
 export interface User {
   id: number;
   email: string;
   is_staff: boolean;
+  user_id?: number;
+  role?: 'student' | 'admin';
+  profile_id?: string;
 }
 
 interface AuthContextValue {
@@ -30,6 +33,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Any 401 (e.g. the 24h session expired with the tab open) clears the user;
+    // ProtectedRoute then redirects to /signin.
+    setUnauthorizedHandler(() => setUser(null));
+    return () => setUnauthorizedHandler(null);
+  }, []);
+
+  useEffect(() => {
     apiFetch<User>('/api/auth/me/')
       .then(setUser)
       .catch(() => setUser(null))
@@ -45,8 +55,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    await apiFetch('/api/auth/logout/', { method: 'POST' });
-    setUser(null);
+    try {
+      await apiFetch('/api/auth/logout/', { method: 'POST' });
+    } catch {
+      // already signed out (expired session): fall through and clear the user
+    } finally {
+      setUser(null);
+    }
   }, []);
 
   const value = useMemo(

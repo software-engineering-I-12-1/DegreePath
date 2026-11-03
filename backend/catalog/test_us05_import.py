@@ -131,5 +131,5 @@ class CatalogImportTests(APITestCase):
             format='multipart',
         )
         self.client.force_login(self.student)
-        options = self.client.get('/api/profile/options/').json()
+        options = self.client.get('/api/profiles/options/').json()
         self.assertEqual(options['courses'], [{'code': 'CS-UY 1114', 'title': 'Intro'}])

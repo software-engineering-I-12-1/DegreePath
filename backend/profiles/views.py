@@ -1,8 +1,11 @@
 from django.db import transaction
+from django.db.models import F
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from core.errors import api_error
 
 from . import catalog, terms
 from .models import Profile
@@ -10,40 +13,90 @@ from .validators import validate_profile
 
 
 def _serialize(profile):
-    if profile is None:
-        return {'id': None, 'major': '', 'credit_limit': None, 'target_term': '', 'completed_courses': []}
     return {
         'id': str(profile.id),
         'major': profile.major,
         'credit_limit': profile.credit_limit,
         'target_term': profile.target_term,
         'completed_courses': profile.completed_courses,
+        'profile_version': profile.profile_version,
+        'ready': profile.is_ready,
+        'updated_at': profile.updated_at.isoformat(),
     }
 
 
-class ProfileView(APIView):
-    """The profile is always looked up from the session user, so there is no ID to tamper with (NFR-1)."""
+def _own_profile(user):
+    # Registration creates the profile; get_or_create also covers accounts made before that existed.
+    profile, _ = Profile.objects.get_or_create(user=user)
+    return profile
+
+
+def _apply_update(request, profile):
+    if not isinstance(request.data, dict):
+        return api_error('VALIDATION_ERROR', 'Invalid request body', status.HTTP_400_BAD_REQUEST)
+
+    cleaned, errors, unknown = validate_profile(request.data)
+    if errors:
+        details = [{'field': field, 'message': message} for field, message in errors.items()]
+        if unknown and set(errors) == {'completed_courses'}:
+            return api_error(
+                'UNKNOWN_COURSE',
+                'Course not in the catalog: ' + ', '.join(unknown),
+                status.HTTP_400_BAD_REQUEST,
+                details,
+            )
+        return api_error(
+            'VALIDATION_ERROR', 'Please fix the highlighted fields', status.HTTP_400_BAD_REQUEST, details,
+        )
+
+    has_changes = any(getattr(profile, field) != value for field, value in cleaned.items())
+    with transaction.atomic():
+        for field, value in cleaned.items():
+            setattr(profile, field, value)
+        if has_changes:
+            profile.profile_version = F('profile_version') + 1
+        profile.save()
+        profile.refresh_from_db()
+    return Response(_serialize(profile))
+
+
+class MyProfileView(APIView):
+    """GET/PUT /api/profiles/me/: always the session user's own profile."""
 
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        profile = Profile.objects.filter(user=request.user).first()
-        return Response(_serialize(profile))
+        return Response(_serialize(_own_profile(request.user)))
 
     def put(self, request):
-        if not isinstance(request.data, dict):
-            return Response({'error': 'Invalid request body', 'errors': {}}, status=status.HTTP_400_BAD_REQUEST)
+        return _apply_update(request, _own_profile(request.user))
 
-        cleaned, errors = validate_profile(request.data)
-        if errors:
-            return Response(
-                {'error': 'Please fix the highlighted fields', 'errors': errors},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
 
-        with transaction.atomic():
-            profile, _ = Profile.objects.update_or_create(user=request.user, defaults=cleaned)
-        return Response(_serialize(profile))
+class ProfileDetailView(APIView):
+    """GET/PUT /api/profiles/{id}/: 404 if unknown, 403 NOT_OWNER if it belongs to someone else (NFR-1)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def _load(self, request, profile_id):
+        import uuid
+        try:
+            val = uuid.UUID(str(profile_id))
+        except (ValueError, AttributeError):
+            return None, api_error('NOT_FOUND', 'Profile not found', status.HTTP_404_NOT_FOUND)
+        profile = Profile.objects.filter(pk=val).first()
+        if profile is None:
+            return None, api_error('NOT_FOUND', 'Profile not found', status.HTTP_404_NOT_FOUND)
+        if profile.user_id != request.user.pk:
+            return None, api_error('NOT_OWNER', 'You do not have access to this profile', status.HTTP_403_FORBIDDEN)
+        return profile, None
+
+    def get(self, request, profile_id):
+        profile, error = self._load(request, profile_id)
+        return error or Response(_serialize(profile))
+
+    def put(self, request, profile_id):
+        profile, error = self._load(request, profile_id)
+        return error or _apply_update(request, profile)
 
 
 class OptionsView(APIView):

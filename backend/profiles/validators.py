@@ -22,8 +22,8 @@ def _whole_number(value):
 
 
 def validate_profile(data):
-    """Return (cleaned, errors). errors maps field name -> message; nothing is saved if non-empty."""
-    cleaned, errors = {}, {}
+    """Return (cleaned, errors, unknown_codes). errors maps field -> message; nothing is saved if non-empty."""
+    cleaned, errors, unknown = {}, {}, []
 
     # Major
     major = data.get('major')
@@ -68,4 +68,4 @@ def validate_profile(data):
         else:
             cleaned['completed_courses'] = codes
 
-    return cleaned, errors
+    return cleaned, errors, unknown
