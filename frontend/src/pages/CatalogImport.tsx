@@ -63,7 +63,7 @@ export default function CatalogImport() {
       {error && <div role="alert" className="form-error">
         <p>{error}. No courses were imported.</p>
         {details.length > 0 && <ul>{details.map((item, index) => (
-          <li key={index}>Row {item.row ?? '?'}{item.column ? `, ${item.column}` : ''}: {item.message}</li>
+          <li key={index}>{item.row != null && `Row ${item.row}${item.column ? `, ${item.column}` : ''}: `}{item.message}</li>
         ))}</ul>}
       </div>}
       {courses.length > 0 && <section aria-label="Catalog courses">

@@ -1,6 +1,7 @@
 """
 Catalog Service Layer.
-Manages transactional course import, prerequisite CNF persistence, and corequisite canonicalization (US-05, US-06).
+Manages transactional course import, prerequisite CNF persistence, corequisite canonicalization,
+and cycle rejection (US-05, US-06, US-07).
 """
 
 import re
@@ -9,6 +10,7 @@ from django.db import transaction
 from django.db.models import F
 from .models import Course, CourseOffering, PrereqClause, PrereqClauseCourse, Corequisite, CatalogState, CatalogImport
 from .prereq_parser import parse_prerequisite_string, UnknownCourseError, PrereqParseError
+from .cycle_detector import COREQUISITE_CONTRADICTION, CatalogCycle, detect_cycle
 
 
 class CatalogImportError(Exception):
@@ -17,6 +19,13 @@ class CatalogImportError(Exception):
         self.errors = errors
         msgs = "; ".join(e.get('message', str(e)) for e in errors)
         super().__init__(f"Catalog import rejected: {msgs}")
+
+
+class CatalogCycleError(Exception):
+    """Raised inside the import transaction so a cyclic catalog is rolled back (US-07 AC2)."""
+    def __init__(self, cycle: CatalogCycle):
+        self.cycle = cycle
+        super().__init__(cycle.message)
 
 
 @transaction.atomic
@@ -78,6 +87,25 @@ def apply_corequisites_to_course(
         # Canonical ordering: smaller ID first (US-06 AC2)
         c1, c2 = (course, partner) if course.id < partner.id else (partner, course)
         Corequisite.objects.get_or_create(course=c1, coreq_course=c2)
+
+
+def catalog_rules():
+    """
+    Reads every stored prerequisite clause and corequisite pair as course codes, in the
+    shape detect_cycle takes. Called inside the import transaction, so it sees the courses
+    already in the catalog together with the rows being imported.
+    """
+    clauses = {}
+    for clause_id, course_code, required_code in PrereqClauseCourse.objects.values_list(
+        'clause_id', 'clause__course__code', 'required_course__code'
+    ):
+        clauses.setdefault(course_code, {}).setdefault(clause_id, []).append(required_code)
+    prerequisites = {code: list(by_clause.values()) for code, by_clause in clauses.items()}
+
+    corequisites = Corequisite.objects.order_by('course__code', 'coreq_course__code').values_list(
+        'course__code', 'coreq_course__code'
+    )
+    return prerequisites, list(corequisites)
 
 
 def import_course_catalog(
@@ -224,7 +252,12 @@ def import_course_catalog(
                     all_courses_by_code=courses_by_code
                 )
 
-            # 4. Atomically bump CatalogState version
+            # 4. Reject cycles in the catalog as it would be after this import (US-07 AC1, AC4)
+            cycle = detect_cycle(*catalog_rules())
+            if cycle:
+                raise CatalogCycleError(cycle)
+
+            # 5. Atomically bump CatalogState version
             state, _ = CatalogState.objects.get_or_create(id=1)
             state.catalog_version += 1
             state.save()
@@ -246,6 +279,16 @@ def import_course_catalog(
 
             return report
 
+    except CatalogCycleError as err:
+        column = 'corequisites' if err.cycle.kind == COREQUISITE_CONTRADICTION else 'prerequisites'
+        err_dict = [{'row': None, 'column': column, 'value': err.cycle.path, 'message': err.cycle.message}]
+        CatalogImport.objects.create(
+            admin=admin_user,
+            kind='courses',
+            status='rejected',
+            report={'errors': err_dict}
+        )
+        raise CatalogImportError(err_dict)
     except UnknownCourseError as err:
         err_dict = [{'row': 'prerequisites', 'column': 'prerequisites', 'message': str(err)}]
         CatalogImport.objects.create(
