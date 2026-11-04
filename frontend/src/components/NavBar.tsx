@@ -13,12 +13,19 @@ export default function NavBar() {
       </Link>
       <span className="navbar-spacer" />
       {user ? (
+              
         <>
           <Link to="/courses">Courses</Link>
-          <Link to="/profile">Profile</Link>
-          <Link to="/plans">Plans</Link>
-          {user.is_staff && <Link to="/catalog/import">Import catalog</Link>}
+          {user.is_staff ? (
+            <Link to="/catalog/import">Import catalog</Link>
+          ) : (
+            <>
+              <Link to="/profile">Profile</Link>
+              <Link to="/plans">Plans</Link>
+            </>
+          )}
           <button
+          
             onClick={async () => {
               await logout();
               navigate('/signin');
