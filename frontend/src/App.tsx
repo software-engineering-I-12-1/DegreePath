@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
 import ProtectedRoute from './auth/ProtectedRoute';
+import StudentRoute from './auth/StudentRoute';
 import AdminRoute from './auth/AdminRoute';
 import NavBar from './components/NavBar';
 import Home from './pages/Home';
@@ -21,15 +22,24 @@ export function App() {
           <Route path="/" element={<Home />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/register" element={<Register />} />
+
+          {/* Any signed-in user */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/profile" element={<Profile />} />
             <Route path="/courses" element={<Courses />} />
+          </Route>
+
+          {/* Students only */}
+          <Route element={<StudentRoute />}>
+            <Route path="/profile" element={<Profile />} />
             <Route path="/plans" element={<Plans />} />
             <Route path="/plans/:planId" element={<Plans />} />
           </Route>
+
+          {/* Admins only */}
           <Route element={<AdminRoute />}>
             <Route path="/catalog/import" element={<CatalogImport />} />
           </Route>
+
           <Route path="*" element={<p style={{ textAlign: 'center', marginTop: '3rem' }}>Page not found</p>} />
         </Routes>
       </AuthProvider>

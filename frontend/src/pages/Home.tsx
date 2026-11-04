@@ -28,10 +28,17 @@ export function Home() {
         </p>
         <div className="hero-actions">
           {user ? (
-            <>
-              <Link to="/profile" className="btn">Go to my profile</Link>
-              <Link to="/plans" className="btn btn-secondary">My plans</Link>
-            </>
+            user.is_staff ? (
+              <>
+                <Link to="/catalog/import" className="btn">Import catalog</Link>
+                <Link to="/courses" className="btn btn-secondary">Browse courses</Link>
+              </>
+            ) : (
+              <>
+                <Link to="/profile" className="btn">Go to my profile</Link>
+                <Link to="/plans" className="btn btn-secondary">My plans</Link>
+              </>
+            )
           ) : (
             <>
               <Link to="/register" className="btn">Get started</Link>
