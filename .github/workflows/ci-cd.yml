@@ -2,9 +2,9 @@ name: DegreePath CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, dev ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, dev ]
 
 jobs:
   # ---------------------------------------------------------------------------
@@ -71,7 +71,7 @@ jobs:
   deploy:
     name: Continuous Deployment (Render)
     needs: [frontend-check, backend-test]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev') && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Render Deploy Hook

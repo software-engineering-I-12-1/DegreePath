@@ -1,0 +1,7 @@
+code,title,credits,offerings,prerequisites,corequisites
+CS-UY 2124,Object Oriented Programming,4,"Fall,Spring",CS-UY 1114,
+CS-UY 2134,Programming Languages,4,Spring,CS-UY 1114,
+CS-UY 2413,Design and Analysis of Algorithms,4,"Fall,Spring",CS-UY 1114 AND (CS-UY 2124 OR CS-UY 2134),
+PHYS-UY 101,General Physics I,3,Fall,,PHYS-UY 101L
+PHYS-UY 101L,General Physics I Lab,1,Fall,,PHYS-UY 101
+CS-UY 3943,Special Topics in Computer Science,4,Spring,Instructor permission required,

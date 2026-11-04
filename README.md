@@ -168,6 +168,64 @@ flowchart LR
 
 ---
 
+## Local Setup
+
+Requires Python 3.11 and Node.js 20 or later. Run everything from the repository root.
+
+**Backend, Windows (PowerShell)**
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r backend\requirements.txt
+cd backend
+..\.venv\Scripts\python.exe manage.py migrate
+..\.venv\Scripts\python.exe manage.py createsuperuser
+..\.venv\Scripts\python.exe manage.py runserver
+```
+
+**Backend, macOS / Linux**
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r backend/requirements.txt
+cd backend
+../.venv/bin/python manage.py migrate
+../.venv/bin/python manage.py createsuperuser
+../.venv/bin/python manage.py runserver
+```
+
+`createsuperuser` creates the administrator account (email and password). Students register in the app.
+
+**Frontend (second terminal)**
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open the URL printed by Vite (http://localhost:5173).
+
+### Demo data
+
+Sign in as the administrator, open **Import catalog**, and upload these files from [backend/catalog](backend/catalog) in this order:
+
+| File | What it shows | Expected result |
+|---|---|---|
+| [demo_bad_credits.csv](backend/catalog/demo_bad_credits.csv) | Credits "four" in row 2 (US-05 AC2) | Rejected with "Row 2, credits"; nothing imported |
+| [demo_courses.csv](backend/catalog/demo_courses.csv) | 3 valid courses (US-05 AC1; upload twice for AC3) | "3 courses imported (3 new, 0 updated)" |
+| [demo_rules.csv](backend/catalog/demo_rules.csv) | AND/OR prerequisite, corequisite pair, prose prerequisite (US-06) | "6 courses imported (6 new, 0 updated)" |
+| [demo_cycle.csv](backend/catalog/demo_cycle.csv) | Prerequisite cycle (US-07 AC1, AC2) | Rejected: "Prerequisite cycle detected: CS-UY 3101 → CS-UY 3102 → CS-UY 3103 → CS-UY 3101" |
+| [demo_contradiction.csv](backend/catalog/demo_contradiction.csv) | Prerequisite chain between corequisites (US-07 AC4) | Rejected: "Corequisite contradiction detected: CS-UY 3201 → CS-UY 3202 → CS-UY 3203 ⇄ CS-UY 3201" |
+
+Then register a student and use **Courses** to search (try "algorithms", "physics", "special").
+
+### Tests
+
+From `backend`: `..\.venv\Scripts\python.exe manage.py test` (Windows) or `../.venv/bin/python manage.py test` (macOS/Linux). From `frontend`: `npm run build`.
+
+---
+
 ## Architectural Decision Records (ADRs)
 
 - **[ADR-01] React Frontend with Django Backend & Sessions:**
