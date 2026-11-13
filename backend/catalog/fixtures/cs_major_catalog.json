@@ -1,0 +1,1054 @@
+[
+  {
+    "model": "catalog.course",
+    "pk": 910001,
+    "fields": {
+      "code": "CS-UY 1114",
+      "title": "Introduction to Programming",
+      "credits": 4,
+      "level": 1000,
+      "prereq_manual_review": false,
+      "prereq_raw_text": ""
+    }
+  },
+  {
+    "model": "catalog.course",
+    "pk": 910002,
+    "fields": {
+      "code": "CS-UY 1124",
+      "title": "Object Oriented Programming",
+      "credits": 4,
+      "level": 1000,
+      "prereq_manual_review": false,
+      "prereq_raw_text": ""
+    }
+  },
+  {
+    "model": "catalog.course",
+    "pk": 910003,
+    "fields": {
+      "code": "CS-UY 1134",
+      "title": "Data Structures and Algorithms",
+      "credits": 4,
+      "level": 1000,
+      "prereq_manual_review": false,
+      "prereq_raw_text": ""
+    }
+  },
+  {
+    "model": "catalog.course",
+    "pk": 910004,
+    "fields": {
+      "code": "CS-UY 2124",
+      "title": "Object Oriented Programming II",
+      "credits": 4,
+      "level": 2000,
+      "prereq_manual_review": false,
+      "prereq_raw_text": ""
+    }
+  },
+  {
+    "model": "catalog.course",
+    "pk": 910005,
+    "fields": {
+      "code": "CS-UY 2134",
+      "title": "Algorithms",
+      "credits": 4,
+      "level": 2000,
+      "prereq_manual_review": false,
+      "prereq_raw_text": ""
+    }
+  },
+  {
+    "model": "catalog.course",
+    "pk": 910006,
+    "fields": {
+      "code": "CS-UY 2214",
+      "title": "Computer Architecture",
+      "credits": 4,
+      "level": 2000,
+      "prereq_manual_review": false,
+      "prereq_raw_text": ""
+    }
+  },
+  {
+    "model": "catalog.course",
+    "pk": 910007,
+    "fields": {
+      "code": "CS-UY 3224",
+      "title": "Operating Systems",
+      "credits": 4,
+      "level": 3000,
+      "prereq_manual_review": false,
+      "prereq_raw_text": ""
+    }
+  },
+  {
+    "model": "catalog.course",
+    "pk": 910008,
+    "fields": {
+      "code": "CS-UY 3234",
+      "title": "Computer Networks",
+      "credits": 3,
+      "level": 3000,
+      "prereq_manual_review": false,
+      "prereq_raw_text": ""
+    }
+  },
+  {
+    "model": "catalog.course",
+    "pk": 910009,
+    "fields": {
+      "code": "CS-UY 3083",
+      "title": "Database Systems",
+      "credits": 3,
+      "level": 3000,
+      "prereq_manual_review": false,
+      "prereq_raw_text": ""
+    }
+  },
+  {
+    "model": "catalog.course",
+    "pk": 910010,
+    "fields": {
+      "code": "CS-UY 3113",
+      "title": "Software Engineering",
+      "credits": 3,
+      "level": 3000,
+      "prereq_manual_review": false,
+      "prereq_raw_text": ""
+    }
+  },
+  {
+    "model": "catalog.course",
+    "pk": 910011,
+    "fields": {
+      "code": "CS-UY 3240",
+      "title": "Introduction to Machine Learning",
+      "credits": 3,
+      "level": 3000,
+      "prereq_manual_review": false,
+      "prereq_raw_text": ""
+    }
+  },
+  {
+    "model": "catalog.course",
+    "pk": 910012,
+    "fields": {
+      "code": "CS-UY 3314",
+      "title": "Artificial Intelligence",
+      "credits": 3,
+      "level": 3000,
+      "prereq_manual_review": false,
+      "prereq_raw_text": ""
+    }
+  },
+  {
+    "model": "catalog.course",
+    "pk": 910013,
+    "fields": {
+      "code": "CS-UY 3513",
+      "title": "Computer Security",
+      "credits": 3,
+      "level": 3000,
+      "prereq_manual_review": false,
+      "prereq_raw_text": ""
+    }
+  },
+  {
+    "model": "catalog.course",
+    "pk": 910014,
+    "fields": {
+      "code": "CS-UY 3943",
+      "title": "Information Security",
+      "credits": 3,
+      "level": 3000,
+      "prereq_manual_review": false,
+      "prereq_raw_text": ""
+    }
+  },
+  {
+    "model": "catalog.course",
+    "pk": 910015,
+    "fields": {
+      "code": "CS-UY 4533",
+      "title": "Advanced Algorithms",
+      "credits": 3,
+      "level": 4000,
+      "prereq_manual_review": false,
+      "prereq_raw_text": ""
+    }
+  },
+  {
+    "model": "catalog.course",
+    "pk": 910016,
+    "fields": {
+      "code": "CS-UY 4513",
+      "title": "Distributed Systems",
+      "credits": 3,
+      "level": 4000,
+      "prereq_manual_review": false,
+      "prereq_raw_text": ""
+    }
+  },
+  {
+    "model": "catalog.course",
+    "pk": 910017,
+    "fields": {
+      "code": "CS-UY 4523",
+      "title": "Cloud Computing",
+      "credits": 3,
+      "level": 4000,
+      "prereq_manual_review": false,
+      "prereq_raw_text": ""
+    }
+  },
+  {
+    "model": "catalog.course",
+    "pk": 910018,
+    "fields": {
+      "code": "CS-UY 4613",
+      "title": "Computer Graphics",
+      "credits": 3,
+      "level": 4000,
+      "prereq_manual_review": false,
+      "prereq_raw_text": ""
+    }
+  },
+  {
+    "model": "catalog.course",
+    "pk": 910019,
+    "fields": {
+      "code": "CS-UY 4713",
+      "title": "Capstone Project",
+      "credits": 3,
+      "level": 4000,
+      "prereq_manual_review": false,
+      "prereq_raw_text": ""
+    }
+  },
+  {
+    "model": "catalog.course",
+    "pk": 910020,
+    "fields": {
+      "code": "CS-UY 4711",
+      "title": "Capstone Laboratory",
+      "credits": 1,
+      "level": 4000,
+      "prereq_manual_review": false,
+      "prereq_raw_text": ""
+    }
+  },
+  {
+    "model": "catalog.course",
+    "pk": 910021,
+    "fields": {
+      "code": "MA-UY 1024",
+      "title": "Calculus I",
+      "credits": 4,
+      "level": 1000,
+      "prereq_manual_review": false,
+      "prereq_raw_text": ""
+    }
+  },
+  {
+    "model": "catalog.course",
+    "pk": 910022,
+    "fields": {
+      "code": "MA-UY 1124",
+      "title": "Calculus II",
+      "credits": 4,
+      "level": 1000,
+      "prereq_manual_review": false,
+      "prereq_raw_text": ""
+    }
+  },
+  {
+    "model": "catalog.course",
+    "pk": 910023,
+    "fields": {
+      "code": "MA-UY 2314",
+      "title": "Discrete Mathematics",
+      "credits": 4,
+      "level": 2000,
+      "prereq_manual_review": false,
+      "prereq_raw_text": ""
+    }
+  },
+  {
+    "model": "catalog.course",
+    "pk": 910024,
+    "fields": {
+      "code": "MA-UY 2034",
+      "title": "Linear Algebra",
+      "credits": 4,
+      "level": 2000,
+      "prereq_manual_review": false,
+      "prereq_raw_text": ""
+    }
+  },
+  {
+    "model": "catalog.course",
+    "pk": 910025,
+    "fields": {
+      "code": "MA-UY 2224",
+      "title": "Probability and Statistics",
+      "credits": 4,
+      "level": 2000,
+      "prereq_manual_review": false,
+      "prereq_raw_text": ""
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920001,
+    "fields": {
+      "course": 910001,
+      "season": "Fall"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920002,
+    "fields": {
+      "course": 910001,
+      "season": "Spring"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920003,
+    "fields": {
+      "course": 910002,
+      "season": "Fall"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920004,
+    "fields": {
+      "course": 910002,
+      "season": "Spring"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920005,
+    "fields": {
+      "course": 910003,
+      "season": "Fall"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920006,
+    "fields": {
+      "course": 910003,
+      "season": "Spring"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920007,
+    "fields": {
+      "course": 910004,
+      "season": "Fall"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920008,
+    "fields": {
+      "course": 910004,
+      "season": "Spring"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920009,
+    "fields": {
+      "course": 910005,
+      "season": "Fall"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920010,
+    "fields": {
+      "course": 910005,
+      "season": "Spring"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920011,
+    "fields": {
+      "course": 910006,
+      "season": "Fall"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920012,
+    "fields": {
+      "course": 910006,
+      "season": "Spring"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920013,
+    "fields": {
+      "course": 910007,
+      "season": "Fall"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920014,
+    "fields": {
+      "course": 910008,
+      "season": "Spring"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920015,
+    "fields": {
+      "course": 910009,
+      "season": "Fall"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920016,
+    "fields": {
+      "course": 910010,
+      "season": "Spring"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920017,
+    "fields": {
+      "course": 910011,
+      "season": "Fall"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920018,
+    "fields": {
+      "course": 910012,
+      "season": "Spring"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920019,
+    "fields": {
+      "course": 910013,
+      "season": "Fall"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920020,
+    "fields": {
+      "course": 910014,
+      "season": "Spring"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920021,
+    "fields": {
+      "course": 910015,
+      "season": "Fall"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920022,
+    "fields": {
+      "course": 910016,
+      "season": "Spring"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920023,
+    "fields": {
+      "course": 910017,
+      "season": "Fall"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920024,
+    "fields": {
+      "course": 910018,
+      "season": "Spring"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920025,
+    "fields": {
+      "course": 910019,
+      "season": "Fall"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920026,
+    "fields": {
+      "course": 910020,
+      "season": "Spring"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920027,
+    "fields": {
+      "course": 910021,
+      "season": "Fall"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920028,
+    "fields": {
+      "course": 910021,
+      "season": "Spring"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920029,
+    "fields": {
+      "course": 910022,
+      "season": "Fall"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920030,
+    "fields": {
+      "course": 910022,
+      "season": "Spring"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920031,
+    "fields": {
+      "course": 910023,
+      "season": "Fall"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920032,
+    "fields": {
+      "course": 910023,
+      "season": "Spring"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920033,
+    "fields": {
+      "course": 910024,
+      "season": "Fall"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920034,
+    "fields": {
+      "course": 910024,
+      "season": "Spring"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920035,
+    "fields": {
+      "course": 910025,
+      "season": "Fall"
+    }
+  },
+  {
+    "model": "catalog.courseoffering",
+    "pk": 920036,
+    "fields": {
+      "course": 910025,
+      "season": "Spring"
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930001,
+    "fields": {
+      "course": 910002,
+      "position": 0
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940001,
+    "fields": {
+      "clause": 930001,
+      "required_course": 910001
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930002,
+    "fields": {
+      "course": 910003,
+      "position": 0
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940002,
+    "fields": {
+      "clause": 930002,
+      "required_course": 910002
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930003,
+    "fields": {
+      "course": 910004,
+      "position": 0
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940003,
+    "fields": {
+      "clause": 930003,
+      "required_course": 910002
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930004,
+    "fields": {
+      "course": 910005,
+      "position": 0
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940004,
+    "fields": {
+      "clause": 930004,
+      "required_course": 910003
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940005,
+    "fields": {
+      "clause": 930004,
+      "required_course": 910004
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930005,
+    "fields": {
+      "course": 910005,
+      "position": 1
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940006,
+    "fields": {
+      "clause": 930005,
+      "required_course": 910023
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930006,
+    "fields": {
+      "course": 910006,
+      "position": 0
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940007,
+    "fields": {
+      "clause": 930006,
+      "required_course": 910002
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930007,
+    "fields": {
+      "course": 910007,
+      "position": 0
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940008,
+    "fields": {
+      "clause": 930007,
+      "required_course": 910006
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930008,
+    "fields": {
+      "course": 910008,
+      "position": 0
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940009,
+    "fields": {
+      "clause": 930008,
+      "required_course": 910007
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930009,
+    "fields": {
+      "course": 910009,
+      "position": 0
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940010,
+    "fields": {
+      "clause": 930009,
+      "required_course": 910003
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930010,
+    "fields": {
+      "course": 910010,
+      "position": 0
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940011,
+    "fields": {
+      "clause": 930010,
+      "required_course": 910003
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930011,
+    "fields": {
+      "course": 910011,
+      "position": 0
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940012,
+    "fields": {
+      "clause": 930011,
+      "required_course": 910003
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930012,
+    "fields": {
+      "course": 910011,
+      "position": 1
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940013,
+    "fields": {
+      "clause": 930012,
+      "required_course": 910024
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930013,
+    "fields": {
+      "course": 910011,
+      "position": 2
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940014,
+    "fields": {
+      "clause": 930013,
+      "required_course": 910025
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930014,
+    "fields": {
+      "course": 910012,
+      "position": 0
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940015,
+    "fields": {
+      "clause": 930014,
+      "required_course": 910005
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930015,
+    "fields": {
+      "course": 910012,
+      "position": 1
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940016,
+    "fields": {
+      "clause": 930015,
+      "required_course": 910025
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930016,
+    "fields": {
+      "course": 910013,
+      "position": 0
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940017,
+    "fields": {
+      "clause": 930016,
+      "required_course": 910007
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930017,
+    "fields": {
+      "course": 910014,
+      "position": 0
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940018,
+    "fields": {
+      "clause": 930017,
+      "required_course": 910013
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930018,
+    "fields": {
+      "course": 910015,
+      "position": 0
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940019,
+    "fields": {
+      "clause": 930018,
+      "required_course": 910005
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930019,
+    "fields": {
+      "course": 910016,
+      "position": 0
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940020,
+    "fields": {
+      "clause": 930019,
+      "required_course": 910007
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930020,
+    "fields": {
+      "course": 910016,
+      "position": 1
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940021,
+    "fields": {
+      "clause": 930020,
+      "required_course": 910008
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930021,
+    "fields": {
+      "course": 910017,
+      "position": 0
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940022,
+    "fields": {
+      "clause": 930021,
+      "required_course": 910016
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930022,
+    "fields": {
+      "course": 910018,
+      "position": 0
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940023,
+    "fields": {
+      "clause": 930022,
+      "required_course": 910003
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930023,
+    "fields": {
+      "course": 910018,
+      "position": 1
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940024,
+    "fields": {
+      "clause": 930023,
+      "required_course": 910024
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930024,
+    "fields": {
+      "course": 910019,
+      "position": 0
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940025,
+    "fields": {
+      "clause": 930024,
+      "required_course": 910010
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930025,
+    "fields": {
+      "course": 910020,
+      "position": 0
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940026,
+    "fields": {
+      "clause": 930025,
+      "required_course": 910010
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930026,
+    "fields": {
+      "course": 910022,
+      "position": 0
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940027,
+    "fields": {
+      "clause": 930026,
+      "required_course": 910021
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930027,
+    "fields": {
+      "course": 910024,
+      "position": 0
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940028,
+    "fields": {
+      "clause": 930027,
+      "required_course": 910021
+    }
+  },
+  {
+    "model": "catalog.prereqclause",
+    "pk": 930028,
+    "fields": {
+      "course": 910025,
+      "position": 0
+    }
+  },
+  {
+    "model": "catalog.prereqclausecourse",
+    "pk": 940029,
+    "fields": {
+      "clause": 930028,
+      "required_course": 910022
+    }
+  },
+  {
+    "model": "catalog.corequisite",
+    "pk": 950001,
+    "fields": {
+      "course": 910019,
+      "coreq_course": 910020
+    }
+  }
+]
