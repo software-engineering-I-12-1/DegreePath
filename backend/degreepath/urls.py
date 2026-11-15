@@ -23,6 +23,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('accounts.urls')),
     path('api/profiles/', include('profiles.urls')),
+    path('api/plan-export/', include('plan_export.urls')),
     path('api/', include('core.urls')),
     path('api/', include('catalog.urls')),
     # Catch-all for React SPA frontend routing
