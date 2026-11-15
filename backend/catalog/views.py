@@ -1,5 +1,5 @@
 """
-Views for Course Catalog and Administrator Imports (US-04, US-05, US-06).
+Views for Course Catalog, Degree Programs and Administrator Imports (US-04, US-05, US-06, US-08).
 """
 
 import csv
@@ -11,9 +11,11 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from django.db.models import Q
-from .models import Course
+from django.shortcuts import get_object_or_404
+from .models import Course, DegreeProgram
 from .serializers import CourseSerializer
 from .services import import_course_catalog, CatalogImportError
+from .requirement_import import import_degree_requirements, program_summary
 
 
 def _bad_file(message, details=None):
@@ -104,3 +106,56 @@ class CatalogImportView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
         return Response({'message': f"{report['imported']} courses imported", **report}, status=status.HTTP_201_CREATED)
+
+
+class RequirementImportView(APIView):
+    """Import a JSON degree-requirements file for one program (US-08); staff accounts only."""
+
+    permission_classes = [IsAdminUser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+    def post(self, request):
+        uploaded = request.FILES.get('file')
+        if uploaded is not None:
+            if not uploaded.name.lower().endswith('.json'):
+                return _bad_file('Upload a .json requirements file')
+            try:
+                payload = json.loads(uploaded.read().decode('utf-8-sig'))
+            except UnicodeDecodeError:
+                return _bad_file('File must be UTF-8 encoded')
+            except json.JSONDecodeError as exc:
+                return _bad_file(f'Invalid JSON: {exc.msg}')
+        else:
+            payload = request.data
+
+        try:
+            result = import_degree_requirements(payload, admin_user=request.user)
+        except CatalogImportError as err:
+            return Response(
+                {'error': {'code': 'IMPORT_REJECTED', 'message': str(err), 'details': err.errors,
+                           'import_id': err.import_id}},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        summary = result['summary']
+        message = f"{len(summary['requirements'])} requirements imported for {summary['name']}"
+        return Response({'message': message, **result}, status=status.HTTP_201_CREATED)
+
+
+class ProgramListView(APIView):
+    """List degree programs (design API-15)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        programs = DegreeProgram.objects.values('id', 'name', 'kind')
+        return Response({'results': list(programs)}, status=status.HTTP_200_OK)
+
+
+class ProgramDetailView(APIView):
+    """One program's requirement summary: required courses, pools and credit thresholds (US-08 AC1)."""
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, program_id):
+        program = get_object_or_404(DegreeProgram, pk=program_id)
+        return Response(program_summary(program), status=status.HTTP_200_OK)

@@ -24,3 +24,5 @@
 .summary dt { font-weight: 600; }
 .summary dd { margin: 0; }
 .form-actions { display: flex; gap: 0.6rem; }
+.link-button { border: none; background: none; padding: 0; color: var(--violet-dark); text-decoration: underline; cursor: pointer; font: inherit; }
+.link-button:hover { background: none; color: var(--violet-dark); }

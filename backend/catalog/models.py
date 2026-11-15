@@ -173,6 +173,83 @@ class CatalogState(models.Model):
         return f"Catalog Version: {self.catalog_version}"
 
 
+class DegreeProgram(models.Model):
+    """
+    A major or minor whose graduation rules are defined by Requirement rows (US-08).
+    """
+    KIND_CHOICES = [
+        ('major', 'Major'),
+        ('minor', 'Minor'),
+    ]
+
+    name = models.CharField(max_length=100, unique=True)
+    kind = models.CharField(max_length=10, choices=KIND_CHOICES, default='major')
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return f"{self.name} ({self.kind})"
+
+
+class Requirement(models.Model):
+    """
+    One degree rule of a program (US-08): every listed course is required, choose N from a
+    pool of courses, or a minimum number of credits at or above a course level.
+    """
+    REQUIRED = 'required'
+    POOL = 'pool'
+    CREDIT_THRESHOLD = 'credit_threshold'
+    TYPE_CHOICES = [
+        (REQUIRED, 'Required courses'),
+        (POOL, 'Choose N from pool'),
+        (CREDIT_THRESHOLD, 'Credit threshold'),
+    ]
+
+    program = models.ForeignKey(DegreeProgram, on_delete=models.CASCADE, related_name='requirements')
+    name = models.CharField(max_length=255)
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    position = models.PositiveSmallIntegerField(default=0)
+    choose_n = models.PositiveSmallIntegerField(null=True, blank=True)
+    min_credits = models.PositiveSmallIntegerField(null=True, blank=True)
+    min_level = models.PositiveSmallIntegerField(null=True, blank=True)
+    courses = models.ManyToManyField(Course, through='RequirementCourse', related_name='requirements')
+
+    class Meta:
+        ordering = ['program', 'position']
+        constraints = [
+            models.UniqueConstraint(fields=['program', 'name'], name='unique_requirement_name_per_program'),
+            models.CheckConstraint(
+                check=~models.Q(type='pool') | models.Q(choose_n__gte=1),
+                name='pool_requires_choose_n'
+            ),
+            models.CheckConstraint(
+                check=~models.Q(type='credit_threshold') | models.Q(min_credits__gt=0),
+                name='threshold_requires_min_credits'
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.program.name}: {self.name} ({self.type})"
+
+
+class RequirementCourse(models.Model):
+    """
+    A course listed by a required or pool Requirement. PROTECT keeps a course that a degree
+    rule depends on from being deleted out from under it.
+    """
+    requirement = models.ForeignKey(Requirement, on_delete=models.CASCADE, related_name='requirement_courses')
+    course = models.ForeignKey(Course, on_delete=models.PROTECT, related_name='requirement_courses')
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['requirement', 'course'], name='unique_requirement_course')
+        ]
+
+    def __str__(self):
+        return f"{self.course.code} in {self.requirement.name}"
+
+
 class CatalogImport(models.Model):
     """
     Audit record for course and requirement file imports (all-or-nothing).
