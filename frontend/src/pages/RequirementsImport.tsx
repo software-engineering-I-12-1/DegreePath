@@ -12,6 +12,7 @@ interface ProgramSummary {
   id: number;
   name: string;
   kind: string;
+  max_elective_pools_per_course: number;
   requirements: RequirementSummary[];
 }
 
@@ -91,7 +92,8 @@ export default function RequirementsImport() {
       <h1>Import degree requirements</h1>
       <p>
         Upload a JSON file naming the program and its requirements: required courses, &ldquo;choose N&rdquo;
-        pools, and credit thresholds. The upload replaces that program&rsquo;s previous requirements.
+        pools, and credit thresholds. Optionally set <code>max_elective_pools_per_course</code>
+        (1 = single count, 2 = double count). The upload replaces that program&rsquo;s previous requirements.
       </p>
       <form onSubmit={submit}>
         <label htmlFor="requirements-file">Requirements file</label>
@@ -118,6 +120,10 @@ export default function RequirementsImport() {
 
       {summary && <section aria-label="Requirement summary">
         <h2>{summary.name} requirements</h2>
+        <p>
+          A course may count toward at most {summary.max_elective_pools_per_course} elective
+          pool{summary.max_elective_pools_per_course === 1 ? '' : 's'}.
+        </p>
         {summary.requirements.map((rule) => (
           <div key={rule.name}>
             <h3>{rule.name} <small>· {TYPE_LABELS[rule.type]}</small></h3>

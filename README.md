@@ -222,7 +222,7 @@ For degree requirements (US-08), import [demo_major_courses.csv](backend/catalog
 
 | File | What it shows | Expected result |
 |---|---|---|
-| [demo_requirements.json](backend/catalog/demo_requirements.json) | 8 required courses, a "choose 3 from 6" pool, 12 credits at 3000-level (US-08 AC1) | "3 requirements imported for Computer Science (BS)" and a summary of all three rule types |
+| [demo_requirements.json](backend/catalog/demo_requirements.json) | 8 required courses, a "choose 3 from 6" pool, 12 credits at 3000-level, `max_elective_pools_per_course: 1` (US-08 AC1) | "3 requirements imported for Computer Science (BS)" and a summary of all three rule types |
 | [demo_requirements_bad_pool.json](backend/catalog/demo_requirements_bad_pool.json) | Pool "choose 5 from 4" (US-08 AC2) | Rejected: 'Pool "Theory electives" asks to choose 5 from 4 courses' |
 | [demo_requirements_unknown_course.json](backend/catalog/demo_requirements_unknown_course.json) | Course not in the catalog (US-08 AC3) | Rejected: 'Requirement "Core courses" references CS-UY 9999, which is not in the catalog' |
 

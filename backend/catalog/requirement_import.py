@@ -48,6 +48,19 @@ def _validate(data) -> Tuple[Optional[Dict[str, Any]], List[Dict[str, Any]]]:
     if kind not in PROGRAM_KINDS:
         errors.append({'row': None, 'column': 'kind', 'value': kind, 'message': f"Program kind must be major or minor; got '{kind}'"})
 
+    # Optional in JSON; default 1 matches the Sprint 2 "counts toward only one pool" rule.
+    if 'max_elective_pools_per_course' in data and data.get('max_elective_pools_per_course') is not None:
+        max_pools = _positive_int(data.get('max_elective_pools_per_course'))
+        if max_pools is None:
+            errors.append({
+                'row': None, 'column': 'max_elective_pools_per_course',
+                'value': data.get('max_elective_pools_per_course'),
+                'message': 'max_elective_pools_per_course must be a whole number of at least 1 '
+                           '(1 = single count, 2 = double count, …)',
+            })
+    else:
+        max_pools = 1
+
     raw_requirements = data.get('requirements')
     if not isinstance(raw_requirements, list) or not raw_requirements:
         errors.append({'row': None, 'column': 'requirements', 'message': 'The file contains no requirements'})
@@ -138,7 +151,12 @@ def _validate(data) -> Tuple[Optional[Dict[str, Any]], List[Dict[str, Any]]]:
                 'choose_n': choose_n, 'min_credits': min_credits, 'min_level': min_level,
             })
 
-    return {'program': program, 'kind': kind, 'requirements': requirements}, errors
+    return {
+        'program': program,
+        'kind': kind,
+        'max_elective_pools_per_course': max_pools or 1,
+        'requirements': requirements,
+    }, errors
 
 
 def _reject(admin_user, errors):
@@ -175,7 +193,13 @@ def program_summary(program: DegreeProgram) -> Dict[str, Any]:
             'min_credits': requirement.min_credits,
             'min_level': requirement.min_level,
         })
-    return {'id': program.id, 'name': program.name, 'kind': program.kind, 'requirements': requirements}
+    return {
+        'id': program.id,
+        'name': program.name,
+        'kind': program.kind,
+        'max_elective_pools_per_course': program.max_elective_pools_per_course,
+        'requirements': requirements,
+    }
 
 
 def import_degree_requirements(data, admin_user=None) -> Dict[str, Any]:
@@ -202,11 +226,21 @@ def import_degree_requirements(data, admin_user=None) -> Dict[str, Any]:
     try:
         with transaction.atomic():
             program, created = DegreeProgram.objects.get_or_create(
-                name=clean['program'], defaults={'kind': clean['kind']}
+                name=clean['program'],
+                defaults={
+                    'kind': clean['kind'],
+                    'max_elective_pools_per_course': clean['max_elective_pools_per_course'],
+                },
             )
+            updates = []
             if not created and program.kind != clean['kind']:
                 program.kind = clean['kind']
-                program.save(update_fields=['kind'])
+                updates.append('kind')
+            if not created and program.max_elective_pools_per_course != clean['max_elective_pools_per_course']:
+                program.max_elective_pools_per_course = clean['max_elective_pools_per_course']
+                updates.append('max_elective_pools_per_course')
+            if updates:
+                program.save(update_fields=updates)
             program.requirements.all().delete()
 
             for position, req in enumerate(clean['requirements']):

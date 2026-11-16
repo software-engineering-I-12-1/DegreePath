@@ -1,6 +1,7 @@
 {
   "program": "Computer Science (BS)",
   "kind": "major",
+  "max_elective_pools_per_course": 1,
   "requirements": [
     {
       "name": "Core courses",

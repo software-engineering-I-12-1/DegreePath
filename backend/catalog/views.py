@@ -147,7 +147,7 @@ class ProgramListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        programs = DegreeProgram.objects.values('id', 'name', 'kind')
+        programs = DegreeProgram.objects.values('id', 'name', 'kind', 'max_elective_pools_per_course')
         return Response({'results': list(programs)}, status=status.HTTP_200_OK)
 
 

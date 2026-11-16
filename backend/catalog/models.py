@@ -176,6 +176,8 @@ class CatalogState(models.Model):
 class DegreeProgram(models.Model):
     """
     A major or minor whose graduation rules are defined by Requirement rows (US-08).
+    max_elective_pools_per_course limits how many pool requirements one course may
+    count toward (1 = single count, 2 = double count, …). Used later by US-18.
     """
     KIND_CHOICES = [
         ('major', 'Major'),
@@ -184,9 +186,19 @@ class DegreeProgram(models.Model):
 
     name = models.CharField(max_length=100, unique=True)
     kind = models.CharField(max_length=10, choices=KIND_CHOICES, default='major')
+    max_elective_pools_per_course = models.PositiveSmallIntegerField(
+        default=1,
+        help_text="How many elective pools one course may count toward (1 = single count).",
+    )
 
     class Meta:
         ordering = ['name']
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(max_elective_pools_per_course__gte=1),
+                name='program_max_elective_pools_at_least_one',
+            ),
+        ]
 
     def __str__(self):
         return f"{self.name} ({self.kind})"

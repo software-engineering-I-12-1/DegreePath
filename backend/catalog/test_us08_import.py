@@ -25,6 +25,7 @@ def pilot_major(**overrides):
     data = {
         'program': 'Computer Science (BS)',
         'kind': 'major',
+        'max_elective_pools_per_course': 1,
         'requirements': [
             {'name': 'Core courses', 'type': 'required', 'courses': CORE},
             {'name': 'Systems electives', 'type': 'pool', 'choose_n': 3, 'courses': SYSTEMS},
@@ -50,7 +51,7 @@ class RequirementImportTests(APITestCase):
     def stored_rules(self):
         """Everything a rejected import must leave untouched: programs, rules, rule courses and the catalog version."""
         return (
-            sorted(DegreeProgram.objects.values_list('name', 'kind')),
+            sorted(DegreeProgram.objects.values_list('name', 'kind', 'max_elective_pools_per_course')),
             sorted(Requirement.objects.values_list('program__name', 'name', 'type', 'choose_n', 'min_credits', 'min_level')),
             sorted(RequirementCourse.objects.values_list('requirement__name', 'course__code')),
             list(CatalogState.objects.values_list('catalog_version', flat=True)),
@@ -77,6 +78,8 @@ class RequirementImportTests(APITestCase):
         self.assertEqual(rules['Systems electives']['description'], 'Choose 3 of 6')
         self.assertEqual(rules['Upper-level credits']['type'], 'credit_threshold')
         self.assertEqual(rules['Upper-level credits']['description'], 'At least 12 credits at 3000-level or above')
+        self.assertEqual(body['summary']['max_elective_pools_per_course'], 1)
+        self.assertEqual(DegreeProgram.objects.get().max_elective_pools_per_course, 1)
         self.assertEqual(CatalogImport.objects.get(id=body['import_id']).kind, 'requirements')
 
     def test_ac1_summary_page_is_served_by_the_programs_endpoints(self):
@@ -86,10 +89,16 @@ class RequirementImportTests(APITestCase):
 
         listing = student.get(PROGRAMS_URL)
         self.assertEqual(listing.status_code, 200)
-        self.assertEqual(listing.json()['results'], [{'id': program_id, 'name': 'Computer Science (BS)', 'kind': 'major'}])
+        self.assertEqual(listing.json()['results'], [{
+            'id': program_id,
+            'name': 'Computer Science (BS)',
+            'kind': 'major',
+            'max_elective_pools_per_course': 1,
+        }])
 
         detail = student.get(f'{PROGRAMS_URL}{program_id}/')
         self.assertEqual(detail.status_code, 200)
+        self.assertEqual(detail.json()['max_elective_pools_per_course'], 1)
         self.assertEqual(
             [(rule['type'], rule['description']) for rule in detail.json()['requirements']],
             [
@@ -195,3 +204,26 @@ class RequirementImportTests(APITestCase):
         response = self.client.get(f'{PROGRAMS_URL}999/')
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json()['error']['code'], 'NOT_FOUND')
+
+    def test_max_elective_pools_per_course_is_stored_and_defaults_to_one(self):
+        without_field = pilot_major()
+        without_field.pop('max_elective_pools_per_course')
+        self.assertEqual(self.import_file(without_field).status_code, 201)
+        self.assertEqual(DegreeProgram.objects.get().max_elective_pools_per_course, 1)
+
+        response = self.import_file(pilot_major(max_elective_pools_per_course=2))
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.json()['summary']['max_elective_pools_per_course'], 2)
+        self.assertEqual(DegreeProgram.objects.get().max_elective_pools_per_course, 2)
+
+    def test_invalid_max_elective_pools_per_course_is_rejected(self):
+        before = self.stored_rules()
+        for bad in (0, -1, 1.5, 'two', True):
+            with self.subTest(bad=bad):
+                response = self.import_file(pilot_major(max_elective_pools_per_course=bad))
+                self.assert_rejected(
+                    response,
+                    'max_elective_pools_per_course must be a whole number of at least 1 '
+                    '(1 = single count, 2 = double count, …)',
+                )
+                self.assertEqual(self.stored_rules(), before)
