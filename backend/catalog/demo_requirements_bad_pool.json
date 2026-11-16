@@ -1,0 +1,11 @@
+{
+  "program": "Computer Science (BS)",
+  "requirements": [
+    {
+      "name": "Theory electives",
+      "type": "pool",
+      "choose_n": 5,
+      "courses": ["CS-UY 3083", "CS-UY 3254", "CS-UY 3314", "CS-UY 3923"]
+    }
+  ]
+}
