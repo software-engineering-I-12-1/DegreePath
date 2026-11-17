@@ -1,11 +1,13 @@
 """
 Plan generator (US-09): an OR-Tools CP-SAT model over the snapshot (ADR-03, design §5.5 IF-1).
 
-One Boolean take[c, t] per not-yet-completed course c and term t in the planning window
-where c is offered. Hard rules: each course at most once; at most credit_limit credits per
-term; every prerequisite clause met by a completed course or one taken in a strictly earlier
-term; corequisites in the same term unless the partner is completed; manual-review courses
-never scheduled. Degree requirements come from requirements.add_constraints().
+One Boolean take[c, t] per not-yet-completed course c and term t in the planning window.
+Each course at most once (hard). The rest are constraints a student could change, added
+through ModelContext.add() so the conflict explainer (explainer.py) can name them: at most
+credit_limit credits per term; every prerequisite clause met by a completed course or one
+taken in a strictly earlier term; corequisites in the same term unless the partner is
+completed; only terms the course is offered in; manual-review courses never scheduled.
+Degree requirements come from requirements.add_constraints().
 
 The objective is fewest total credits, then earliest terms. The solver runs with one worker
 and a fixed seed, so the same snapshot always gives the same plan. Every plan passes the
@@ -18,7 +20,7 @@ from dataclasses import dataclass
 
 from ortools.sat.python import cp_model
 
-from . import requirements
+from . import conflicts, requirements
 from .snapshot import PlanEntry, Term
 from .validator import validate
 
@@ -66,11 +68,13 @@ class PlannerBug(Exception):
 class ModelContext:
     """What requirements.add_constraints() needs to add its constraints."""
 
-    def __init__(self, model, snapshot, terms, take):
+    def __init__(self, model, snapshot, terms, take, guard=None):
         self.model = model
         self.snapshot = snapshot
         self.terms = terms
         self.take = take
+        self._guard = guard
+        self._before = {}
         self._by_course = {}
         for (code, index), var in take.items():
             self._by_course.setdefault(code, []).append((index, var))
@@ -80,58 +84,89 @@ class ModelContext:
         return cp_model.LinearExpr.sum([v for _, v in self._by_course.get(code, [])])
 
     def taken_before(self, code, index):
-        """1 if the course is planned in a term strictly before term `index`."""
-        return cp_model.LinearExpr.sum([v for i, v in self._by_course.get(code, []) if i < index])
+        """
+        1 if the course is planned in a term strictly before term `index`. Built as a running
+        total, before[t + 1] = before[t] + take[t], so the model grows linearly with the window.
+        """
+        if code not in self._before:
+            terms = sorted(self._by_course.get(code, []), key=lambda pair: pair[0])
+            running, prefix = 0, {}
+            for i, var in terms:
+                prefix[i] = running
+                nxt = self.model.new_bool_var(f'before[{code},{i + 1}]')
+                self.model.add(nxt == running + var)
+                running = nxt
+            self._before[code] = (prefix, running)
+        prefix, total = self._before[code]
+        if index in prefix:
+            return prefix[index]
+        return total if prefix and index > max(prefix) else 0
+
+    def total(self, terms):
+        """A linear sum that stays a solver expression even when empty."""
+        return cp_model.LinearExpr.sum(list(terms))
+
+    def add(self, constraint, ref):
+        """
+        Adds a constraint the student could change. ref (a conflicts.ConstraintRef) names it
+        in a conflict set: the explainer switches it on with an assumption literal, while
+        generation adds it unconditionally.
+        """
+        added = self.model.add(constraint)
+        if self._guard is not None:
+            added.only_enforce_if(self._guard(ref))
+        return added
 
 
-def _build(snapshot):
-    model = cp_model.CpModel()
-    terms = snapshot.terms()
-    candidates = sorted(
-        code for code, c in snapshot.courses.items()
-        if code not in snapshot.completed and not c.manual_review
-    )
-    take = {}
+def _build(snapshot, terms, candidates, guard=None, model=None):
+    """
+    The constraints shared by generation and explanation (ADR-03: one encoding, two models).
+    take[c, t] exists for every candidate and every term in `terms`; offerings and manual
+    review are constraints rather than missing variables, so the explainer can name them.
+    The target term is the end of `terms` (explainer.py handles it as TARGET_TERM).
+    """
+    model = model or cp_model.CpModel()
+    take = {(code, t.index): model.new_bool_var(f'take[{code},{t}]') for code in candidates for t in terms}
+    ctx = ModelContext(model, snapshot, terms, take, guard)
+    courses = snapshot.courses
+
     for code in candidates:
-        offered = snapshot.courses[code].offered
-        for t in terms:
-            if t.season in offered:
-                take[(code, t.index)] = model.new_bool_var(f'take[{code},{t}]')
-    ctx = ModelContext(model, snapshot, terms, take)
+        model.add(ctx.scheduled(code) <= 1)                                    # hard
 
-    for code in candidates:
-        model.add(ctx.scheduled(code) <= 1)
-
+    cap = conflicts.credit_cap(snapshot)
     for t in terms:
-        load = [snapshot.courses[code].credits * take[(code, t.index)]
-                for code in candidates if (code, t.index) in take]
-        model.add(cp_model.LinearExpr.sum(load) <= snapshot.credit_limit)
+        load = [courses[code].credits * take[(code, t.index)] for code in candidates]
+        ctx.add(cp_model.LinearExpr.sum(load) <= snapshot.credit_limit, cap)
 
     for code in candidates:
-        for clause in snapshot.courses[code].prereqs:
+        c = courses[code]
+        if c.manual_review:
+            ctx.add(ctx.scheduled(code) == 0, conflicts.manual_review(c))
+        off_season = [take[(code, t.index)] for t in terms if t.season not in c.offered]
+        if off_season:
+            ctx.add(cp_model.LinearExpr.sum(off_season) == 0, conflicts.offering(c))
+        for position, clause in enumerate(c.prereqs):
             if any(d in snapshot.completed for d in clause):
                 continue
+            ref = conflicts.prereq(c, position)
             for t in terms:
-                if (code, t.index) in take:
-                    earlier = [ctx.taken_before(d, t.index) for d in sorted(clause)]
-                    model.add(take[(code, t.index)] <= cp_model.LinearExpr.sum(earlier))
+                earlier = [ctx.taken_before(d, t.index) for d in sorted(clause)]
+                ctx.add(take[(code, t.index)] <= cp_model.LinearExpr.sum(earlier), ref)
 
+    included = set(candidates)
     for a, b in sorted(snapshot.corequisites):
-        if a in snapshot.completed or b in snapshot.completed:
+        if a in snapshot.completed or b in snapshot.completed or not {a, b} & included:
             continue
+        ref = conflicts.coreq(a, b)
         for t in terms:
-            model.add(_var(take, a, t) == _var(take, b, t))
+            ctx.add(_var(take, a, t) == _var(take, b, t), ref)
 
     counts_for = requirements.add_constraints(ctx)
-
-    # Credits dominate: one credit outweighs any spread of courses over terms.
-    weight = len(take) * (len(terms) + 1) + 1
-    first = terms[0].index if terms else 0
-    model.minimize(cp_model.LinearExpr.sum([
-        (weight * snapshot.courses[code].credits + (index - first)) * var
-        for (code, index), var in sorted(take.items())
-    ]))
     return model, take, counts_for
+
+
+def _candidates(snapshot):
+    return sorted(code for code in snapshot.courses if code not in snapshot.completed)
 
 
 def _var(take, code, term):
@@ -149,7 +184,15 @@ def _solver(limits):
 
 def generate(snapshot, *, limits=GENERATION_LIMITS, validator=validate):
     """Returns ValidPlan, Infeasible or PlannerTimeout; raises PlannerBug if the plan fails validation."""
-    model, take, counts_for = _build(snapshot)
+    terms = snapshot.terms()
+    model, take, counts_for = _build(snapshot, terms, _candidates(snapshot))
+    # Credits dominate: one credit outweighs any spread of courses over terms.
+    weight = len(take) * (len(terms) + 1) + 1
+    first = terms[0].index if terms else 0
+    model.minimize(cp_model.LinearExpr.sum([
+        (weight * snapshot.courses[code].credits + (index - first)) * var
+        for (code, index), var in sorted(take.items())
+    ]))
     solver = _solver(limits)
     status = solver.solve(model)
 

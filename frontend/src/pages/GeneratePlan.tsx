@@ -25,10 +25,34 @@ interface ValidPlan {
   unenforced_requirements: string[];
 }
 
+type ConflictType =
+  | 'CREDIT_CAP' | 'TARGET_TERM' | 'PREREQ' | 'COREQ' | 'OFFERING'
+  | 'REQUIRED_COURSE' | 'POOL' | 'CREDIT_THRESHOLD' | 'MANUAL_REVIEW';
+
+interface Conflict {
+  type: ConflictType;
+  ref: string;
+  text: string;
+}
+
 interface InfeasiblePlan {
   status: 'infeasible';
   message: string;
+  conflicts: Conflict[];
+  possibly_non_minimal: boolean;
 }
+
+const CONFLICT_LABELS: Record<ConflictType, string> = {
+  CREDIT_CAP: 'Your credit limit',
+  TARGET_TERM: 'Your target term',
+  PREREQ: 'Prerequisite',
+  COREQ: 'Corequisite',
+  OFFERING: 'Term offering',
+  REQUIRED_COURSE: 'Degree requirement',
+  POOL: 'Degree requirement',
+  CREDIT_THRESHOLD: 'Degree requirement',
+  MANUAL_REVIEW: 'Instructor permission',
+};
 
 type GenerateResult = ValidPlan | InfeasiblePlan;
 
@@ -87,13 +111,39 @@ export default function GeneratePlan() {
       )}
 
       {result?.status === 'infeasible' && (
-        <div role="alert" className="form-error plan-message">
+        <section role="alert" aria-label="Why no plan exists" className="form-error plan-message">
           <p><strong>{result.message}.</strong></p>
-          <p>
-            Try a later target graduation term or a higher credit limit on your{' '}
-            <Link to="/profile">profile</Link>, then generate again.
-          </p>
-        </div>
+          {result.conflicts.length > 0 ? (
+            <>
+              <p>These rules can't all be met. Changing any one of them removes this conflict:</p>
+              <ul className="plan-conflicts">
+                {result.conflicts.map((c) => (
+                  <li key={c.ref}>
+                    <span className="plan-conflict-type">{CONFLICT_LABELS[c.type] ?? c.type}</span>
+                    <span>{c.text}</span>
+                    {c.ref.startsWith('profile.') && (
+                      <Link to="/profile" className="plan-conflict-fix">Change on your profile</Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              {result.possibly_non_minimal && (
+                <p className="plan-muted">
+                  <strong>Possibly non-minimal:</strong> planning ran out of time before this list could be
+                  narrowed down, so some of these may not be part of the conflict.
+                </p>
+              )}
+              <p className="plan-muted">
+                If another conflict remains after you change one of these, it is shown when you generate again.
+              </p>
+            </>
+          ) : (
+            <p>
+              Try a later target graduation term or a higher credit limit on your{' '}
+              <Link to="/profile">profile</Link>, then generate again.
+            </p>
+          )}
+        </section>
       )}
 
       {result?.status === 'valid' && (

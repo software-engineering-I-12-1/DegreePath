@@ -1,7 +1,11 @@
+import time
+from dataclasses import replace
+
 from django.test import SimpleTestCase
 
 from planner.benchmark import P95_TARGET_SECONDS, benchmark_catalog, representative_profiles, run
-from planner.engine import ValidPlan, generate
+from planner.engine import Infeasible, ValidPlan, generate
+from planner.explainer import REQUEST_DEADLINE_SECONDS, explain
 from planner.validator import validate
 
 
@@ -26,3 +30,21 @@ class PerformanceTests(SimpleTestCase):
             plan = generate(snap)
             if isinstance(plan, ValidPlan):
                 self.assertEqual(validate(plan.entries, snap), [])
+
+
+class ExplanationPerformanceTests(SimpleTestCase):
+    def test_explanations_for_infeasible_benchmark_profiles_fit_the_request_budget(self):  # NFR-3, US-12 AC4
+        # The 20 benchmark profiles with only two terms left; most can no longer finish in time.
+        worst, explained = 0.0, 0
+        for snap in representative_profiles(20):
+            snap = replace(snap, target_term=snap.first_term.next())
+            if not isinstance(generate(snap), Infeasible):
+                continue
+            start = time.monotonic()
+            explanation = explain(snap, deadline=start + REQUEST_DEADLINE_SECONDS)
+            worst = max(worst, time.monotonic() - start)
+            explained += 1
+            self.assertFalse(explanation.possibly_non_minimal)
+            self.assertIn('profile.target_term', {c.ref for c in explanation.conflicts})
+        self.assertGreaterEqual(explained, 15)
+        self.assertLess(worst, REQUEST_DEADLINE_SECONDS)

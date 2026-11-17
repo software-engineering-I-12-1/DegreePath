@@ -1,7 +1,17 @@
-"""Degree rules used by the solver and its independent validator."""
+"""
+Degree rules (US-18) used by the solver and its independent validator.
+
+add_constraints() adds required courses, elective-pool minimums, the per-course pool limit
+and credit thresholds to the CP-SAT model; check() verifies the same rules without the
+solver. Every rule a student's plan could break is added with ctx.add(constraint, ref), so
+the conflict explainer (US-12) can name it when no plan exists (US-18 AC3).
+
+This module must not import OR-Tools or Django: the validator imports it.
+"""
 
 from collections import deque
 
+from . import conflicts
 from .snapshot import Violation
 
 ENFORCED_TYPES = frozenset({'required', 'pool', 'credit_threshold'})
@@ -12,19 +22,27 @@ def unenforced(snapshot) -> tuple:
 
 
 def add_constraints(ctx) -> dict:
-    """Add degree rules to CP-SAT; return pool assignments for planned courses."""
+    """
+    Add degree rules to CP-SAT; return pool assignments for planned courses.
+
+    ctx is engine.ModelContext: ctx.model, ctx.snapshot, ctx.scheduled(code) ("1 if the
+    course is in the plan"), ctx.total(terms) (a linear sum) and ctx.add(constraint, ref).
+    Returns counts_for: {(course_code, pool_name): BoolVar}.
+    """
     snap = ctx.snapshot
-    for code in sorted(snap.required_codes() - snap.completed):
-        ctx.model.add(ctx.scheduled(code) == 1)
+    for rule in snap.requirements:
+        if rule.kind == 'required':
+            for code in sorted(set(rule.courses) - snap.completed):
+                ctx.add(ctx.scheduled(code) == 1, conflicts.required_course(rule, code))
 
     for rule in snap.requirements:
         if rule.kind != 'credit_threshold':
             continue
         completed = sum(snap.courses[code].credits for code in snap.completed
                         if code in snap.courses and snap.courses[code].level >= rule.min_level)
-        planned = sum((course.credits * ctx.scheduled(code) for code, course in snap.courses.items()
-                       if code not in snap.completed and course.level >= rule.min_level), 0)
-        ctx.model.add(completed + planned >= rule.min_credits)
+        planned = ctx.total(course.credits * ctx.scheduled(code) for code, course in sorted(snap.courses.items())
+                            if code not in snap.completed and course.level >= rule.min_level)
+        ctx.add(planned >= rule.min_credits - completed, conflicts.credit_threshold(rule))
 
     counts_for = {}
     by_course = {}
@@ -37,9 +55,11 @@ def add_constraints(ctx) -> dict:
                 counts_for[(code, pool.name)] = var
             allocations.append(var)
             by_course.setdefault(code, []).append(var)
-        ctx.model.add(sum(allocations) >= pool.choose_n)
+        ctx.add(ctx.total(allocations) >= pool.choose_n, conflicts.pool(pool))
+    # The per-course pool limit is a program setting, not something the student can change,
+    # so it stays hard; a conflict it causes is named through the pools involved.
     for allocations in by_course.values():
-        ctx.model.add(sum(allocations) <= snap.max_pools_per_course)
+        ctx.model.add(ctx.total(allocations) <= snap.max_pools_per_course)
     return counts_for
 
 

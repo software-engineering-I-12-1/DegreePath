@@ -3,8 +3,9 @@ Builders for planner tests. Not a test module: the file name does not start with
 """
 
 import re
+from dataclasses import replace
 
-from .snapshot import Course, PlanningInput, Requirement, Term
+from .snapshot import SEASONS, Course, PlanningInput, Requirement, Term
 
 
 def _level(code: str) -> int:
@@ -93,3 +94,40 @@ def pilot_major(**overrides):
     )
     options.update(overrides)
     return snapshot(*_PILOT_COURSES, **options)
+
+
+def restrict(snap, keep):
+    """
+    The snapshot with only the explainable constraints in `keep` (ConstraintRef.ref ids)
+    still in force; hard rules (completed courses, the first term) are untouched. Used to
+    check conflict sets with the generator, independently of the explainer's own model.
+    """
+    keep = set(keep)
+    courses = {}
+    for code, c in snap.courses.items():
+        courses[code] = replace(
+            c,
+            prereqs=tuple(cl for i, cl in enumerate(c.prereqs) if f'prereq:{code}:{i}' in keep),
+            offered=c.offered if f'offering:{code}' in keep else frozenset(SEASONS),
+            manual_review=c.manual_review and f'manual_review:{code}' in keep,
+        )
+    requirements = tuple(
+        replace(r, courses=tuple(code for code in r.courses if f'required:{r.name}:{code}' in keep))
+        if r.kind == 'required' else r
+        for r in snap.requirements
+        if (r.kind == 'required'
+            or (r.kind == 'pool' and f'pool:{r.name}' in keep)
+            or (r.kind == 'credit_threshold' and f'threshold:{r.name}' in keep))
+    )
+    target = snap.target_term
+    if 'profile.target_term' not in keep:
+        target = Term.from_index(max(target.index, snap.first_term.index + 2 * len(courses) + 1))
+    return replace(
+        snap,
+        courses=courses,
+        corequisites=frozenset(p for p in snap.corequisites if f'coreq:{p[0]}:{p[1]}' in keep),
+        requirements=requirements,
+        credit_limit=snap.credit_limit if 'profile.credit_limit' in keep
+        else sum(c.credits for c in courses.values()) + 1,
+        target_term=target,
+    )

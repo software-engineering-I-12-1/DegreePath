@@ -12,6 +12,7 @@ from catalog.models import (
 )
 from planner import engine
 from planner.engine import PlannerBug, PlannerTimeout
+from planner.explainer import Explanation
 from planner.loader import load_snapshot
 from planner.service import validate_entries
 from planner.snapshot import Term
@@ -129,11 +130,45 @@ class GeneratePlanApiTests(APITestCase):
         self.assertIn(('INVALID_TERM', 'MA-UY 1024'), found)
         self.assertIn(('REQUIRED_COURSE', 'CS-UY 2413'), found)
 
-    def test_infeasible_profile_returns_infeasible_status(self):                     # US-09 AC3
+    def test_infeasible_profile_returns_infeasible_status(self):                     # US-09 AC3, AC5
         self.set_profile(target_term='Fall 2027')
         res = self.generate()
         self.assertEqual(res.status_code, 200)
-        self.assertEqual(res.json(), {'status': 'infeasible', 'message': 'No valid plan exists for these constraints'})
+        body = res.json()
+        self.assertEqual(body['status'], 'infeasible')
+        self.assertEqual(body['message'], 'No valid plan exists for these constraints')
+        self.assertNotIn('terms', body)
+
+    def test_infeasible_result_lists_only_the_conflicting_constraints(self):         # US-12 AC1, AC2
+        # Only Spring 2027 and Fall 2027 are left. CS-UY 1114 -> 1134 -> 2413 needs three terms,
+        # and so does CS-UY 3083 (it needs 1134 and runs only in Spring). Either is a minimal
+        # conflict; the credit limit and the other courses are not part of it.
+        self.set_profile(target_term='Fall 2027')
+        body = self.generate().json()
+        self.assertFalse(body['possibly_non_minimal'])
+        self.assertEqual(body['conflicts'][0], {'type': 'TARGET_TERM', 'ref': 'profile.target_term',
+                                                'text': 'Graduate by Fall 2027 (2 terms left)'})
+        self.assertIn({c['ref'] for c in body['conflicts']}, [
+            {'profile.target_term', 'prereq:CS-UY 1134:0', 'prereq:CS-UY 2413:0', 'required:Core courses:CS-UY 2413'},
+            {'profile.target_term', 'prereq:CS-UY 3083:0', 'offering:CS-UY 3083', 'required:Core courses:CS-UY 3083'},
+        ])
+        self.assertTrue(all(c['text'] for c in body['conflicts']))
+
+    def test_required_course_behind_instructor_permission_is_named(self):            # design DR-9
+        add_requirement(DegreeProgram.objects.get(), 'Capstone', 'required', ['CS-UY 3943'], 2)
+        body = self.generate().json()
+        self.assertEqual(body['status'], 'infeasible')
+        self.assertEqual({c['ref'] for c in body['conflicts']},
+                         {'manual_review:CS-UY 3943', 'required:Capstone:CS-UY 3943'})
+
+    def test_explanation_shares_the_28_second_request_deadline(self):                # NFR-3, design DR-8
+        self.set_profile(target_term='Fall 2027')
+        with patch('planner.views.time.monotonic', return_value=1000.0), \
+                patch('planner.views.explain', return_value=Explanation((), True)) as explain:
+            body = self.generate().json()
+        self.assertEqual(explain.call_args.kwargs['deadline'], 1028.0)
+        self.assertTrue(body['possibly_non_minimal'])
+        self.assertEqual(body['conflicts'], [])
 
     def test_timeout_returns_504(self):                                              # US-09 AC3, NFR-3
         with patch('planner.views.generate', return_value=PlannerTimeout()):
