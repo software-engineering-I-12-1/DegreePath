@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ApiError, apiFetch } from '../api';
+import SavePlanForm from '../components/SavePlanForm';
 import './plan.css';
 
 interface PlannedCourse {
@@ -65,6 +66,11 @@ export default function GeneratePlan() {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<GenerateResult | null>(null);
   const [failure, setFailure] = useState<Failure | null>(null);
+  const entries = useMemo(() => result?.status === 'valid'
+    ? result.terms.flatMap(term => term.courses.map(course => ({
+      term: term.term, course_code: course.code, counted_for: course.counted_for,
+    })))
+    : [], [result]);
 
   async function generate() {
     setBusy(true);
@@ -186,6 +192,7 @@ export default function GeneratePlan() {
               </li>
             ))}
           </ol>
+          <SavePlanForm entries={entries} />
         </section>
       )}
     </main>
