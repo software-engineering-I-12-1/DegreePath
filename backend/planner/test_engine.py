@@ -34,7 +34,8 @@ class GenerateFeasibleTests(SimpleTestCase):
         self.assertEqual(len(planned(plan) & {'CS-UY 2204', 'MA-UY 2314'}), 1)
 
     def test_per_term_credit_limit_is_honored(self):                                 # US-09 AC2
-        snap = pilot_major(credit_limit=8)
+        # The full pilot degree needs a longer window at eight credits per term.
+        snap = pilot_major(credit_limit=8, target=Term('Spring', 2031))
         plan = generate(snap)
         self.assertIsInstance(plan, ValidPlan)
         for t in snap.terms():
