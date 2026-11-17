@@ -24,6 +24,7 @@ export default function NavBar() {
           ) : (
             <>
               <Link to="/profile">Profile</Link>
+              <Link to="/plans/generate">Generate plan</Link>
               <Link to="/plans">Plans</Link>
             </>
           )}

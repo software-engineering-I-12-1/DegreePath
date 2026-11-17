@@ -6,6 +6,7 @@ import AdminRoute from './auth/AdminRoute';
 import NavBar from './components/NavBar';
 import Home from './pages/Home';
 import Plans from './pages/Plans';
+import GeneratePlan from './pages/GeneratePlan';
 import Profile from './pages/Profile';
 import Register from './pages/Register';
 import SignIn from './pages/SignIn';
@@ -33,6 +34,7 @@ export function App() {
           <Route element={<StudentRoute />}>
             <Route path="/profile" element={<Profile />} />
             <Route path="/plans" element={<Plans />} />
+            <Route path="/plans/generate" element={<GeneratePlan />} />
             <Route path="/plans/:planId" element={<Plans />} />
           </Route>
 
