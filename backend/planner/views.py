@@ -1,6 +1,7 @@
-"""POST /api/plans/generate/ (US-09; design §5.3 and the §6.1 path table)."""
+"""POST /api/plans/generate/ (US-09, US-12; design §5.3 and the §6.1 path table)."""
 
 import logging
+import time
 
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -12,6 +13,7 @@ from profiles.models import Profile
 
 from . import requirements
 from .engine import GENERATION_LIMITS, Infeasible, PlannerBug, PlannerTimeout, generate
+from .explainer import REQUEST_DEADLINE_SECONDS, explain
 from .loader import ProfileIncomplete, ProgramNotImported, load_snapshot
 
 logger = logging.getLogger(__name__)
@@ -46,6 +48,7 @@ class GeneratePlanView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        started = time.monotonic()
         if request.user.is_staff:
             return api_error('FORBIDDEN', 'Plans are only available to student accounts', status.HTTP_403_FORBIDDEN)
 
@@ -74,7 +77,14 @@ class GeneratePlanView(APIView):
             return api_error('INTERNAL_ERROR', 'Something went wrong while planning', status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         if isinstance(result, Infeasible):
-            return Response({'status': 'infeasible', 'message': result.message})
+            # One deadline for the whole request: explanation gets what generation did not use (DR-8).
+            explanation = explain(snapshot, deadline=started + REQUEST_DEADLINE_SECONDS)
+            return Response({
+                'status': 'infeasible',
+                'message': result.message,
+                'conflicts': [c.as_dict() for c in explanation.conflicts],
+                'possibly_non_minimal': explanation.possibly_non_minimal,
+            })
         if isinstance(result, PlannerTimeout):
             return api_error(
                 'PLANNER_TIMEOUT',
