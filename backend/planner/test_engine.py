@@ -89,9 +89,11 @@ class GenerateFeasibleTests(SimpleTestCase):
                         corequisites=(('X 1001', 'Y 1002'),), completed=('Y 1002',))
         self.assertEqual([e.course for e in generate(snap).entries], ['X 1001'])
 
-    def test_unenforced_requirements_are_reported(self):
-        # Pools and thresholds are US-18 (planner/requirements.py); until then the plan says so.
-        self.assertEqual(requirements.unenforced(pilot_major()), ('Systems electives', 'Upper-level credits'))
+    def test_all_imported_requirement_types_are_enforced(self):
+        self.assertEqual(requirements.unenforced(pilot_major()), ())
+        plan = generate(pilot_major())
+        self.assertIsInstance(plan, ValidPlan)
+        self.assertEqual(validate(plan.entries, pilot_major()), [])
 
 
 class GenerateInfeasibleTests(SimpleTestCase):                                       # US-09 AC3

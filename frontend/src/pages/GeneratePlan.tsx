@@ -7,7 +7,7 @@ interface PlannedCourse {
   code: string;
   title: string;
   credits: number;
-  counted_for: string | null;
+  counted_for: string | string[] | null;
 }
 
 interface PlanTerm {
@@ -127,7 +127,7 @@ export default function GeneratePlan() {
                           <td className="plan-code">{c.code}</td>
                           <td>{c.title}</td>
                           <td>{c.credits}</td>
-                          <td>{c.counted_for ?? '—'}</td>
+                          <td>{Array.isArray(c.counted_for) ? c.counted_for.join(', ') : (c.counted_for ?? '—')}</td>
                         </tr>
                       ))}
                     </tbody>

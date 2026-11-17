@@ -8,7 +8,7 @@ and the validator can be tested without a database.
 import re
 from dataclasses import dataclass, field
 from functools import total_ordering
-from typing import Mapping, Optional
+from typing import Mapping, Optional, Union
 
 SEASONS = ('Spring', 'Fall')
 _TERM_RE = re.compile(r'^\s*(spring|fall)\s+(\d{4})\s*$', re.IGNORECASE)
@@ -99,7 +99,7 @@ class PlanningInput:
 class PlanEntry:
     course: str
     term: Term
-    counted_for: Optional[str] = None
+    counted_for: Optional[Union[str, tuple[str, ...], list[str]]] = None
 
 
 @dataclass(frozen=True)
