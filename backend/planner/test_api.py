@@ -59,7 +59,9 @@ class GeneratePlanApiTests(APITestCase):
 
         program = DegreeProgram.objects.create(name=PROGRAM, kind='major')
         add_requirement(program, 'Core courses', 'required', ['CS-UY 1114', 'CS-UY 1134', 'CS-UY 2413', 'CS-UY 3083'], 0)
-        add_requirement(program, 'Electives', 'pool', ['CS-UY 4563', 'CS-UY 3943'], 1, choose_n=1)
+        add_requirement(program, 'Electives', 'pool', ['CS-UY 3083', 'CS-UY 3943'], 1, choose_n=1)
+        add_requirement(program, 'Upper-level credits', 'credit_threshold', [], 2,
+                        min_credits=4, min_level=3000)
 
         User = get_user_model()
         self.student = User.objects.create_user(email='student@nyu.edu', password='password123')
@@ -94,7 +96,9 @@ class GeneratePlanApiTests(APITestCase):
         self.assertEqual(sorted(planned), ['CS-UY 1114', 'CS-UY 1134', 'CS-UY 2413', 'CS-UY 3083', 'CS-UY 3084', 'MA-UY 1024'])
         self.assertEqual(body['profile_version'], self.profile.profile_version)
         self.assertEqual(body['catalog_version'], 5)
-        self.assertEqual(body['unenforced_requirements'], ['Electives'])
+        self.assertEqual(body['unenforced_requirements'], [])
+        databases = [c for t in body['terms'] for c in t['courses'] if c['code'] == 'CS-UY 3083']
+        self.assertEqual(databases[0]['counted_for'], 'Electives')
 
     def test_plan_honors_prerequisites_offerings_and_corequisites(self):             # US-09 AC2
         term_of = {c['code']: t['term'] for t in self.generate().json()['terms'] for c in t['courses']}

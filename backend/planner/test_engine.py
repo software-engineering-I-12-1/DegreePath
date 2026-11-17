@@ -34,7 +34,8 @@ class GenerateFeasibleTests(SimpleTestCase):
         self.assertEqual(len(planned(plan) & {'CS-UY 2204', 'MA-UY 2314'}), 1)
 
     def test_per_term_credit_limit_is_honored(self):                                 # US-09 AC2
-        snap = pilot_major(credit_limit=8)
+        # The full pilot degree needs a longer window at eight credits per term.
+        snap = pilot_major(credit_limit=8, target=Term('Spring', 2031))
         plan = generate(snap)
         self.assertIsInstance(plan, ValidPlan)
         for t in snap.terms():
@@ -89,9 +90,11 @@ class GenerateFeasibleTests(SimpleTestCase):
                         corequisites=(('X 1001', 'Y 1002'),), completed=('Y 1002',))
         self.assertEqual([e.course for e in generate(snap).entries], ['X 1001'])
 
-    def test_unenforced_requirements_are_reported(self):
-        # Pools and thresholds are US-18 (planner/requirements.py); until then the plan says so.
-        self.assertEqual(requirements.unenforced(pilot_major()), ('Systems electives', 'Upper-level credits'))
+    def test_all_imported_requirement_types_are_enforced(self):
+        self.assertEqual(requirements.unenforced(pilot_major()), ())
+        plan = generate(pilot_major())
+        self.assertIsInstance(plan, ValidPlan)
+        self.assertEqual(validate(plan.entries, pilot_major()), [])
 
 
 class GenerateInfeasibleTests(SimpleTestCase):                                       # US-09 AC3

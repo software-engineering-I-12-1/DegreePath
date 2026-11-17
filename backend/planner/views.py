@@ -35,7 +35,7 @@ def _plan_body(plan, snapshot):
         ],
         'profile_version': plan.profile_version,
         'catalog_version': plan.catalog_version,
-        # Requirement types the planner does not enforce yet (pools and thresholds arrive with US-18).
+        # Keep the field for any future requirement type the planner cannot enforce.
         'unenforced_requirements': list(requirements.unenforced(snapshot)),
     }
 

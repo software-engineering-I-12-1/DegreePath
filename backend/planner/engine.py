@@ -165,7 +165,8 @@ def generate(snapshot, *, limits=GENERATION_LIMITS, validator=validate):
     for (code, index), var in take.items():
         if solver.value(var):
             pools = sorted(name for (c, name), v in counts_for.items() if c == code and solver.value(v))
-            entries.append(PlanEntry(code, Term.from_index(index), pools[0] if pools else None))
+            allocation = pools[0] if len(pools) == 1 else (tuple(pools) if pools else None)
+            entries.append(PlanEntry(code, Term.from_index(index), allocation))
     entries.sort(key=lambda e: (e.term.index, e.course))
 
     violations = validator(entries, snapshot)

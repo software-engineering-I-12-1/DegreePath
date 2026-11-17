@@ -226,6 +226,8 @@ For degree requirements (US-08), import [demo_major_courses.csv](backend/catalog
 | [demo_requirements_bad_pool.json](backend/catalog/demo_requirements_bad_pool.json) | Pool "choose 5 from 4" (US-08 AC2) | Rejected: 'Pool "Theory electives" asks to choose 5 from 4 courses' |
 | [demo_requirements_unknown_course.json](backend/catalog/demo_requirements_unknown_course.json) | Course not in the catalog (US-08 AC3) | Rejected: 'Requirement "Core courses" references CS-UY 9999, which is not in the catalog' |
 
+For a larger planning demo, import [demo_full_major_courses.csv](backend/catalog/demo_full_major_courses.csv), then [demo_full_major_requirements.json](backend/catalog/demo_full_major_requirements.json). The 25-course **Computer Science (BS Demo)** catalog has prerequisite chains, seasonal offerings, a same-term capstone lab, and rules that allow the capstone to count toward two pools. In a student profile, select that program, 12 credits per term, and a target of Spring 2031. These are synthetic demonstration rules inspired by the [NYU Tandon MS core/capstone overlap](https://bulletins.nyu.edu/graduate/engineering/programs/computer-science-tandon-ms/), not NYU degree requirements; the lab's season was aligned with its capstone for a feasible demo.
+
 Then register a student and use **Courses** to search (try "algorithms", "physics", "special").
 
 ### Tests

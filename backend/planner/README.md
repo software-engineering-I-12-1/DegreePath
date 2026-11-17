@@ -1,4 +1,4 @@
-# Planner (US-09)
+# Planner (US-09 and US-18)
 
 Generates a semester-by-semester plan with OR-Tools CP-SAT and checks every plan with an
 independent validator before it is shown (design §5.5, §6.1, ADR-03).
@@ -35,11 +35,11 @@ empty ones. The student's major is matched to an imported program by name (case-
 
 ## Integration notes
 
-- **US-18 (elective pools, credit thresholds):** extend `requirements.py` only. Add the pool and
-  threshold constraints in `add_constraints()` (return the `counts_for` variables), the matching
-  checks in `check()`, and add the types to `ENFORCED_TYPES`. `snapshot.max_pools_per_course`
-  carries the US-08 double-counting setting. Until then the response lists those requirements in
-  `unenforced_requirements` and the page tells the student they are not yet included.
+- **US-18 (elective pools, credit thresholds):** `requirements.py` enforces all three imported
+  rule types in the solver and checks them independently in the validator. Completed courses can
+  fill elective pools, and `max_elective_pools_per_course` limits how many pools one course fills.
+  `counted_for` is a string for one pool, a list for multiple pools, or null for none. Credit
+  thresholds count each eligible completed or planned course once, even if it fills a pool too.
 - **US-10 (save) and US-13 (export):** replace the validation stubs with
   `planner.service.validate_entries(profile, entries)`. Entries are
   `{"course_code", "term": "Fall 2027", "counted_for"}`; the result is a list of
