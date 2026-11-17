@@ -26,6 +26,7 @@ urlpatterns = [
     path('api/', include('core.urls')),
     path('api/', include('catalog.urls')),
     path('api/', include('plans.urls')),
+    path('api/', include('planner.urls')),
     # Catch-all for React SPA frontend routing
     re_path(r'^(?!api/|admin/|static/).*$', index_fallback, name='spa_index'),
 ]

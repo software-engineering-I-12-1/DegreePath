@@ -8,10 +8,11 @@ from catalog.models import CatalogState, Course
 from core.errors import api_error
 from profiles.models import Profile
 from profiles.terms import parse_term
+from planner.loader import ProfileIncomplete, ProgramNotImported
+from planner.service import validate_entries
 
 from .models import Plan
 from .serializers import SavePlanSerializer
-from .validation import PlanValidationUnavailable, validate_plan
 
 
 class IsStudent(BasePermission):
@@ -48,9 +49,11 @@ class PlanListView(APIView):
             state = CatalogState.objects.select_for_update().get(pk=state.pk)
             entries = serializer.validated_data['entries']
             try:
-                violations = validate_plan(entries, profile)
-            except PlanValidationUnavailable as error:
-                return api_error('VALIDATION_UNAVAILABLE', str(error), status.HTTP_503_SERVICE_UNAVAILABLE)
+                violations = validate_entries(profile, entries)
+            except ProfileIncomplete as error:
+                return api_error('PROFILE_INCOMPLETE', str(error), status.HTTP_409_CONFLICT)
+            except ProgramNotImported as error:
+                return api_error('PROGRAM_NOT_IMPORTED', str(error), status.HTTP_409_CONFLICT)
             if violations:
                 return api_error('INVALID_PLAN', 'The plan does not pass validation.', 400, violations)
             courses = Course.objects.in_bulk([entry['course_code'] for entry in entries], field_name='code')

@@ -218,6 +218,16 @@ Sign in as the administrator, open **Import catalog**, and upload these files fr
 | [demo_cycle.csv](backend/catalog/demo_cycle.csv) | Prerequisite cycle (US-07 AC1, AC2) | Rejected: "Prerequisite cycle detected: CS-UY 3101 → CS-UY 3102 → CS-UY 3103 → CS-UY 3101" |
 | [demo_contradiction.csv](backend/catalog/demo_contradiction.csv) | Prerequisite chain between corequisites (US-07 AC4) | Rejected: "Corequisite contradiction detected: CS-UY 3201 → CS-UY 3202 → CS-UY 3203 ⇄ CS-UY 3201" |
 
+For degree requirements (US-08), import [demo_major_courses.csv](backend/catalog/demo_major_courses.csv) on **Import catalog** first, then upload these on **Import requirements**:
+
+| File | What it shows | Expected result |
+|---|---|---|
+| [demo_requirements.json](backend/catalog/demo_requirements.json) | 8 required courses, a "choose 3 from 6" pool, 12 credits at 3000-level, `max_elective_pools_per_course: 1` (US-08 AC1) | "3 requirements imported for Computer Science (BS)" and a summary of all three rule types |
+| [demo_requirements_bad_pool.json](backend/catalog/demo_requirements_bad_pool.json) | Pool "choose 5 from 4" (US-08 AC2) | Rejected: 'Pool "Theory electives" asks to choose 5 from 4 courses' |
+| [demo_requirements_unknown_course.json](backend/catalog/demo_requirements_unknown_course.json) | Course not in the catalog (US-08 AC3) | Rejected: 'Requirement "Core courses" references CS-UY 9999, which is not in the catalog' |
+
+For a larger planning demo, import [demo_full_major_courses.csv](backend/catalog/demo_full_major_courses.csv), then [demo_full_major_requirements.json](backend/catalog/demo_full_major_requirements.json). The 25-course **Computer Science (BS Demo)** catalog has prerequisite chains, seasonal offerings, a same-term capstone lab, and rules that allow the capstone to count toward two pools. In a student profile, select that program, 12 credits per term, and a target of Spring 2031. These are synthetic demonstration rules inspired by the [NYU Tandon MS core/capstone overlap](https://bulletins.nyu.edu/graduate/engineering/programs/computer-science-tandon-ms/), not NYU degree requirements; the lab's season was aligned with its capstone for a feasible demo.
+
 Then register a student and use **Courses** to search (try "algorithms", "physics", "special").
 
 ### Tests

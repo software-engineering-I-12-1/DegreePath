@@ -15,8 +15,9 @@ from .cycle_detector import COREQUISITE_CONTRADICTION, CatalogCycle, detect_cycl
 
 class CatalogImportError(Exception):
     """Raised when an import batch fails validation."""
-    def __init__(self, errors: List[Dict[str, Any]]):
+    def __init__(self, errors: List[Dict[str, Any]], import_id: Optional[int] = None):
         self.errors = errors
+        self.import_id = import_id
         msgs = "; ".join(e.get('message', str(e)) for e in errors)
         super().__init__(f"Catalog import rejected: {msgs}")
 

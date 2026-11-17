@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from rest_framework.test import APIClient
 
-from catalog.models import Course
+from catalog.models import Course, CourseOffering, DegreeProgram, Requirement, RequirementCourse
 from profiles.models import Profile
 from .models import Plan
 
@@ -18,6 +18,10 @@ class SavedPlanTests(TestCase):
             user=self.user, major='Computer Science', credit_limit=15, target_term='Spring 2028',
         )
         self.course = Course.objects.create(code='CS 1000', title='Programming', credits=4)
+        CourseOffering.objects.create(course=self.course, season='Spring')
+        program = DegreeProgram.objects.create(name='Computer Science')
+        required = Requirement.objects.create(program=program, name='Core', type='required')
+        RequirementCourse.objects.create(requirement=required, course=self.course)
         self.client = APIClient()
         self.client.force_authenticate(self.user)
         self.payload = {'name': 'Graduation plan', 'entries': [
@@ -25,10 +29,8 @@ class SavedPlanTests(TestCase):
         ]}
 
     def create_saved_plan(self):
-        with patch('plans.views.validate_plan', return_value=[]) as validator:
-            response = self.client.post('/api/plans/', self.payload, format='json')
+        response = self.client.post('/api/plans/', self.payload, format='json')
         self.assertEqual(response.status_code, 201, response.data)
-        validator.assert_called_once()
         return response.data
 
     def test_save_and_reopen_after_new_session_and_catalog_edit(self):
@@ -54,28 +56,29 @@ class SavedPlanTests(TestCase):
         self.assertEqual(response.data['error']['code'], 'NOT_OWNER')
         self.assertNotIn('entries', response.data)
 
-    def test_unavailable_validator_prevents_persistence(self):
+    def test_missing_degree_program_prevents_persistence(self):
+        DegreeProgram.objects.all().delete()
         response = self.client.post('/api/plans/', self.payload, format='json')
-        self.assertEqual(response.status_code, 503)
-        self.assertEqual(response.data['error']['code'], 'VALIDATION_UNAVAILABLE')
+        self.assertEqual(response.status_code, 409)
+        self.assertEqual(response.data['error']['code'], 'PROGRAM_NOT_IMPORTED')
         self.assertFalse(Plan.objects.exists())
 
     def test_invalid_plan_is_revalidated_and_not_saved(self):
         violations = [{'field': 'entries', 'message': 'Degree pool minimum not met.'}]
-        with patch('plans.views.validate_plan', return_value=violations):
+        with patch('plans.views.validate_entries', return_value=violations):
             response = self.client.post('/api/plans/', self.payload, format='json')
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.data['error']['details'], violations)
         self.assertFalse(Plan.objects.exists())
 
     def test_validator_failure_rolls_back(self):
-        with patch('plans.views.validate_plan', side_effect=RuntimeError('Validation failed')):
+        with patch('plans.views.validate_entries', side_effect=RuntimeError('Validation failed')):
             with self.assertRaises(RuntimeError):
                 self.client.post('/api/plans/', self.payload, format='json')
         self.assertFalse(Plan.objects.exists())
 
     def test_rejects_malformed_and_duplicate_entries(self):
-        invalid = [[], {}, None, [{'term': 'Tomorrow', 'course_code': 'CS 1000'}],
+        invalid = [{}, None, [{'term': 'Tomorrow', 'course_code': 'CS 1000'}],
                    self.payload['entries'] * 2]
         for entries in invalid:
             with self.subTest(entries=entries):
@@ -85,8 +88,7 @@ class SavedPlanTests(TestCase):
 
     def test_unknown_course_is_not_saved(self):
         self.payload['entries'][0]['course_code'] = 'UNKNOWN'
-        with patch('plans.views.validate_plan', return_value=[]):
-            response = self.client.post('/api/plans/', self.payload, format='json')
+        response = self.client.post('/api/plans/', self.payload, format='json')
         self.assertEqual(response.status_code, 400)
         self.assertFalse(Plan.objects.exists())
 

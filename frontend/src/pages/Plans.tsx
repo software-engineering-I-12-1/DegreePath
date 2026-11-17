@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { apiFetch } from '../api';
+import './plan.css';
 
 interface SavedPlan {
   id: string;
   name: string;
   created_at: string;
-  entries: { term: string; course_code: string; title: string; credits: number }[];
+  entries: { term: string; course_code: string; title: string; credits: number;
+    counted_for?: string | string[] | null }[];
 }
-
 export default function Plans() {
   const { planId } = useParams();
   const [plans, setPlans] = useState<SavedPlan[]>([]);
@@ -36,7 +37,7 @@ export default function Plans() {
   }, [planId]);
 
   return (
-    <main className="auth-card">
+    <main className="auth-card plan-card">
       <h1>{selected?.name ?? 'My plans'}</h1>
       {loading && <p role="status">Loading plans…</p>}
       {error && <p role="alert">{error}</p>}
@@ -53,12 +54,13 @@ export default function Plans() {
       )}
       {selected && <>
         <p>Created {new Date(selected.created_at).toLocaleDateString()}</p>
-        <table>
+        <table className="plan-table">
           <caption>Saved course schedule</caption>
-          <thead><tr><th scope="col">Term</th><th scope="col">Course</th><th scope="col">Title</th><th scope="col">Credits</th></tr></thead>
+          <thead><tr><th scope="col">Term</th><th scope="col">Course</th><th scope="col">Title</th><th scope="col">Credits</th><th scope="col">Counts toward</th></tr></thead>
           <tbody>{selected.entries.map(entry => (
             <tr key={entry.course_code}>
               <td>{entry.term}</td><td>{entry.course_code}</td><td>{entry.title}</td><td>{entry.credits}</td>
+              <td>{Array.isArray(entry.counted_for) ? entry.counted_for.join(', ') : (entry.counted_for ?? '—')}</td>
             </tr>
           ))}</tbody>
         </table>
@@ -66,12 +68,4 @@ export default function Plans() {
       {planId && <Link to="/plans">Back to my plans</Link>}
     </main>
   );
-}
-
-export function GeneratePlan() {
-  return <main className="auth-card">
-    <h1>Generate a plan</h1>
-    <p>Plan generation is awaiting the planner integration.</p>
-    <Link to="/profile">Review your profile</Link>
-  </main>;
 }

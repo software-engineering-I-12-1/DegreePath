@@ -1,10 +1,11 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { apiFetch } from '../api';
+import { ApiError, apiFetch } from '../api';
 
 export interface GeneratedPlanEntry {
   term: string;
   course_code: string;
+  counted_for: string | string[] | null;
 }
 
 export default function SavePlanForm({ entries }: { entries: GeneratedPlanEntry[] }) {
@@ -25,7 +26,9 @@ export default function SavePlanForm({ entries }: { entries: GeneratedPlanEntry[
       });
       setSavedId(plan?.id ?? '');
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : 'Could not save the plan.');
+      setError(reason instanceof ApiError && reason.details.length
+        ? reason.details.map(detail => detail.message).join(' ')
+        : reason instanceof Error ? reason.message : 'Could not save the plan.');
     } finally {
       setSaving(false);
     }
@@ -35,7 +38,7 @@ export default function SavePlanForm({ entries }: { entries: GeneratedPlanEntry[
     <label htmlFor="plan-name">Plan name</label>
     <input id="plan-name" value={name} onChange={event => setName(event.target.value)}
       required maxLength={100} disabled={saving} />
-    <button type="submit" disabled={saving || entries.length === 0 || !name.trim()}>
+    <button type="submit" disabled={saving || !!savedId || !name.trim()}>
       {saving ? 'Saving…' : 'Save plan'}
     </button>
     {error && <p role="alert">{error}</p>}

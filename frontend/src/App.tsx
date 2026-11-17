@@ -5,11 +5,13 @@ import StudentRoute from './auth/StudentRoute';
 import AdminRoute from './auth/AdminRoute';
 import NavBar from './components/NavBar';
 import Home from './pages/Home';
-import Plans, { GeneratePlan } from './pages/Plans';
+import Plans from './pages/Plans';
+import GeneratePlan from './pages/GeneratePlan';
 import Profile from './pages/Profile';
 import Register from './pages/Register';
 import SignIn from './pages/SignIn';
 import CatalogImport from './pages/CatalogImport';
+import RequirementsImport from './pages/RequirementsImport';
 import Courses from './pages/Courses';
 import './auth/auth.css';
 
@@ -39,6 +41,7 @@ export function App() {
           {/* Admins only */}
           <Route element={<AdminRoute />}>
             <Route path="/catalog/import" element={<CatalogImport />} />
+            <Route path="/requirements/import" element={<RequirementsImport />} />
           </Route>
 
           <Route path="*" element={<p style={{ textAlign: 'center', marginTop: '3rem' }}>Page not found</p>} />
