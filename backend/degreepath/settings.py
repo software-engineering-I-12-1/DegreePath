@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'core',
     'accounts',
     'profiles',
+    'plan_export',
     'catalog',
     'plans',
 ]

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { apiFetch } from '../api';
+import ExportCsvButton from '../components/ExportCsvButton';
 import './plan.css';
 
 interface SavedPlan {
@@ -49,11 +50,13 @@ export default function Plans() {
           </li>
         ))}</ul> : <>
           <p>No plans yet</p>
+          <button type="button" disabled>Export CSV</button>
           <Link to="/plans/generate">Generate</Link>
         </>
       )}
       {selected && <>
         <p>Created {new Date(selected.created_at).toLocaleDateString()}</p>
+        <ExportCsvButton key={selected.id} planId={selected.id} />
         <table className="plan-table">
           <caption>Saved course schedule</caption>
           <thead><tr><th scope="col">Term</th><th scope="col">Course</th><th scope="col">Title</th><th scope="col">Credits</th><th scope="col">Counts toward</th></tr></thead>
