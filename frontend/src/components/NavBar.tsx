@@ -17,10 +17,14 @@ export default function NavBar() {
         <>
           <Link to="/courses">Courses</Link>
           {user.is_staff ? (
-            <Link to="/catalog/import">Import catalog</Link>
+            <>
+              <Link to="/catalog/import">Import catalog</Link>
+              <Link to="/requirements/import">Import requirements</Link>
+            </>
           ) : (
             <>
               <Link to="/profile">Profile</Link>
+              <Link to="/plans/generate">Generate plan</Link>
               <Link to="/plans">Plans</Link>
             </>
           )}

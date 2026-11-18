@@ -18,11 +18,13 @@ class Exportability:
 
 
 def check_exportable(plan, profile):
+    """Exportable only for a persisted plan that passes full validation against the current profile, catalog and rules."""
     if plan is None:
         return Exportability(False, 'No saved plan')
-    if not plan['feasible']:
-        return Exportability(False, 'Plan is infeasible')
-    problems = adapters.validate_plan(plan['rows'], profile)
+    try:
+        problems = adapters.validate_plan(plan['rows'], profile)
+    except adapters.ValidationUnavailable as error:
+        return Exportability(False, f'Validation unavailable: {error}')
     if problems:
         return Exportability(False, 'Plan fails validation', problems)
     return Exportability(True)
@@ -42,7 +44,7 @@ def ordered_rows(rows):
 
 
 def _safe(value):
-    """Stop spreadsheet formula injection: a leading = + - @ in a title would run as a formula in Excel."""
+    """Stop spreadsheet formula injection: a leading = + - @ would run as a formula in Excel."""
     text = str(value)
     return "'" + text if text.startswith(_FORMULA_PREFIXES) else text
 

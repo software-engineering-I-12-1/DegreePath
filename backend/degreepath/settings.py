@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'profiles',
     'plan_export',
     'catalog',
+    'plans',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'

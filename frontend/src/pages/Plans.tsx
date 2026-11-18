@@ -1,89 +1,71 @@
 import { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { apiFetch } from '../api';
+import './plan.css';
 
-interface ExportStatus {
-  has_plan: boolean;
-  plan_id: string | null;
-  name: string | null;
-  exportable: boolean;
-  reason: string | null;
-  course_count: number;
-  term_count: number;
+interface SavedPlan {
+  id: string;
+  name: string;
+  created_at: string;
+  entries: { term: string; course_code: string; title: string; credits: number;
+    counted_for?: string | string[] | null }[];
 }
-
 export default function Plans() {
-  const [status, setStatus] = useState<ExportStatus | null>(null);
+  const { planId } = useParams();
+  const [plans, setPlans] = useState<SavedPlan[]>([]);
+  const [selected, setSelected] = useState<SavedPlan | null>(null);
   const [loading, setLoading] = useState(true);
-  const [downloading, setDownloading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    apiFetch<ExportStatus>('/api/plan-export/status/')
-      .then(setStatus)
-      .catch((err) => setError(err instanceof Error ? err.message : 'Could not load your plan'))
-      .finally(() => setLoading(false));
-  }, []);
-
-  async function onExport() {
-    if (!status?.plan_id) return;
-    setError(null);
-    setDownloading(true);
-    try {
-      const res = await fetch(`/api/plan-export/${status.plan_id}/csv/`, { credentials: 'same-origin' });
-      if (res.status === 401) {
-        window.location.assign('/signin');
-        return;
-      }
-      if (!res.ok) {
-        let message = 'Export failed';
-        try {
-          message = (await res.json())?.error?.message ?? message;
-        } catch {
-          /* keep default */
-        }
-        throw new Error(message);
-      }
-      const url = URL.createObjectURL(await res.blob());
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = 'degreepath-plan.csv';
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Export failed');
-    } finally {
-      setDownloading(false);
-    }
-  }
-
-  if (loading) return <p className="auth-loading">Loading…</p>;
-
-  const exportable = status?.exportable ?? false;
+    let active = true;
+    setLoading(true);
+    setError('');
+    setSelected(null);
+    setPlans([]);
+    const request = planId
+      ? apiFetch<SavedPlan>(`/api/plans/${encodeURIComponent(planId)}/`)
+      : apiFetch<{ results: SavedPlan[] }>('/api/plans/');
+    request.then(data => {
+      if (!active || !data) return;
+      if ('results' in data) setPlans(data.results);
+      else setSelected(data);
+    }).catch(reason => {
+      if (active) setError(reason instanceof Error ? reason.message : 'Could not load plans.');
+    }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [planId]);
 
   return (
-    <main className="auth-card profile-card">
-      <h1>Your plans</h1>
-
-      {status?.has_plan ? (
-        <p>
-          <strong>{status.name}</strong>: {status.course_count} courses over {status.term_count} terms
-        </p>
-      ) : (
-        <p>No saved plans yet.</p>
+    <main className="auth-card plan-card">
+      <h1>{selected?.name ?? 'My plans'}</h1>
+      {loading && <p role="status">Loading plans…</p>}
+      {error && <p role="alert">{error}</p>}
+      {!loading && !error && !planId && (
+        plans.length ? <ul>{plans.map(plan => (
+          <li key={plan.id}>
+            <Link to={`/plans/${plan.id}`}>{plan.name}</Link>
+            {' · '}{new Date(plan.created_at).toLocaleDateString()}
+          </li>
+        ))}</ul> : <>
+          <p>No plans yet</p>
+          <Link to="/plans/generate">Generate</Link>
+        </>
       )}
-
-      <div className="form-actions">
-        <button type="button" onClick={onExport} disabled={!exportable || downloading}>
-          {downloading ? 'Exporting…' : 'Export CSV'}
-        </button>
-      </div>
-
-      {!exportable && status?.reason && (
-        <p role="status" className="field-error">Export unavailable: {status.reason}</p>
-      )}
-      {error && <p role="alert" className="form-error">{error}</p>}
+      {selected && <>
+        <p>Created {new Date(selected.created_at).toLocaleDateString()}</p>
+        <table className="plan-table">
+          <caption>Saved course schedule</caption>
+          <thead><tr><th scope="col">Term</th><th scope="col">Course</th><th scope="col">Title</th><th scope="col">Credits</th><th scope="col">Counts toward</th></tr></thead>
+          <tbody>{selected.entries.map(entry => (
+            <tr key={entry.course_code}>
+              <td>{entry.term}</td><td>{entry.course_code}</td><td>{entry.title}</td><td>{entry.credits}</td>
+              <td>{Array.isArray(entry.counted_for) ? entry.counted_for.join(', ') : (entry.counted_for ?? '—')}</td>
+            </tr>
+          ))}</tbody>
+        </table>
+      </>}
+      {planId && <Link to="/plans">Back to my plans</Link>}
     </main>
   );
 }
