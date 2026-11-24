@@ -68,6 +68,35 @@ class RealValidatorExportTests(TestCase):
     def valid_entries(self):
         return [entry('Spring 2027', self.intro), entry('Spring 2028', self.next)]
 
+    def test_calendar_includes_only_supplied_dates(self):
+        plan = self.save(self.valid_entries())
+        response = self.client.get(f'/api/plan-export/{plan.id}/calendar/', {'Spring 2027': '2026-11-24'})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response['Content-Type'].startswith('text/calendar'))
+        self.assertIn(b'DTSTART;VALUE=DATE:20261124\r\n', response.content)
+        self.assertEqual(response.content.count(b'BEGIN:VEVENT'), 1)
+        self.assertNotIn(b'Spring 2028', response.content)
+
+    def test_calendar_requires_at_least_one_valid_date(self):
+        plan = self.save(self.valid_entries())
+        url = f'/api/plan-export/{plan.id}/calendar/'
+        for dates, code in (
+            ({}, 'REGISTRATION_DATE_REQUIRED'),
+            ({'Spring 2027': '2026-02-30'}, 'INVALID_DATE'),
+        ):
+            with self.subTest(dates=dates):
+                response = self.client.get(url, dates)
+                self.assertEqual(response.status_code, 400)
+                self.assertEqual(response.data['error']['code'], code)
+
+    def test_calendar_rejects_invalid_or_other_students_plans(self):
+        plan = self.save([])
+        url = f'/api/plan-export/{plan.id}/calendar/'
+        self.assertEqual(self.client.get(url).status_code, 409)
+        other = get_user_model().objects.create_user('calendar-other@example.com')
+        self.client.force_authenticate(other)
+        self.assertEqual(self.client.get(url).status_code, 403)
+
     def test_valid_schedule_downloads(self):
         res = self.export(self.save(self.valid_entries()))
         self.assertEqual(res.status_code, 200)
