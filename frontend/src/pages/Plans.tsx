@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { apiFetch } from '../api';
 import ExportCsvButton from '../components/ExportCsvButton';
+import CalendarExport from '../components/CalendarExport';
 import './plan.css';
 
 interface SavedPlan {
@@ -57,6 +58,8 @@ export default function Plans() {
       {selected && <>
         <p>Created {new Date(selected.created_at).toLocaleDateString()}</p>
         <ExportCsvButton key={selected.id} planId={selected.id} />
+        <CalendarExport key={selected.id} planId={selected.id}
+          terms={[...new Set(selected.entries.map(entry => entry.term))]} />
         <table className="plan-table">
           <caption>Saved course schedule</caption>
           <thead><tr><th scope="col">Term</th><th scope="col">Course</th><th scope="col">Title</th><th scope="col">Credits</th><th scope="col">Counts toward</th></tr></thead>
