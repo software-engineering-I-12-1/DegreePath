@@ -2,8 +2,10 @@
 
 import logging
 import time
+from dataclasses import replace
 
 from rest_framework import status
+from rest_framework import serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -15,6 +17,7 @@ from . import requirements
 from .engine import GENERATION_LIMITS, Infeasible, PlannerBug, PlannerTimeout, generate
 from .explainer import REQUEST_DEADLINE_SECONDS, explain
 from .loader import ProfileIncomplete, ProgramNotImported, load_snapshot
+from .snapshot import Term
 
 logger = logging.getLogger(__name__)
 
@@ -92,3 +95,50 @@ class GeneratePlanView(APIView):
                 status.HTTP_504_GATEWAY_TIMEOUT,
             )
         return Response(_plan_body(result, snapshot))
+
+
+class ScenarioInput(serializers.Serializer):
+    credit_limit = serializers.IntegerField(min_value=1, max_value=24)
+    target_term = serializers.CharField(max_length=20)
+
+    def validate_target_term(self, value):
+        term = Term.parse(value)
+        if term is None or not 2000 <= term.year <= 2100:
+            raise serializers.ValidationError('Enter a term such as Spring 2029.')
+        return term
+
+
+class ComparePlansView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if request.user.is_staff or request.user.is_superuser:
+            return api_error('FORBIDDEN', 'Plans are only available to students.', 403)
+        inputs = ScenarioInput(data=request.data, many=True, min_length=2, max_length=2)
+        inputs.is_valid(raise_exception=True)
+        profile = Profile.objects.filter(user=request.user).first()
+        if profile is None:
+            return api_error('PROFILE_INCOMPLETE', 'Complete your profile first.', 409)
+        try:
+            snapshot = load_snapshot(profile)
+        except ProfileIncomplete as exc:
+            return api_error('PROFILE_INCOMPLETE', str(exc), 409)
+        except ProgramNotImported as exc:
+            return api_error('PROGRAM_NOT_IMPORTED', str(exc), 409)
+
+        scenarios = [replace(snapshot, **settings) for settings in inputs.validated_data]
+        if any(scenario.target_term < scenario.first_term for scenario in scenarios):
+            return api_error('INVALID_TERM', 'Choose a target on or after the next planning term.', 400)
+        results = []
+        for scenario in scenarios:
+            try:
+                result = generate(scenario, limits=GENERATION_LIMITS)
+            except PlannerBug:
+                return api_error('INTERNAL_ERROR', 'Something went wrong while planning.', 500)
+            if isinstance(result, Infeasible):
+                results.append({'status': 'infeasible', 'message': result.message})
+            elif isinstance(result, PlannerTimeout):
+                results.append({'status': 'timeout', 'message': 'The solver reached its time limit.'})
+            else:
+                results.append(_plan_body(result, scenario))
+        return Response(results)

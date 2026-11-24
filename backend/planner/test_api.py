@@ -79,6 +79,19 @@ class GeneratePlanApiTests(APITestCase):
     def generate(self):
         return self.client.post(GENERATE, format='json')
 
+    def test_comparison_uses_temporary_constraints(self):
+        from plans.models import Plan
+
+        result = self.client.post('/api/plans/compare/', [
+            {'credit_limit': 12, 'target_term': 'Fall 2028'},
+            {'credit_limit': 1, 'target_term': 'Spring 2029'},
+        ], format='json')
+        self.assertEqual(result.status_code, 200, result.data)
+        self.assertEqual([scenario['status'] for scenario in result.data], ['valid', 'infeasible'])
+        self.profile.refresh_from_db()
+        self.assertEqual((self.profile.credit_limit, self.profile.target_term), (12, 'Fall 2028'))
+        self.assertFalse(Plan.objects.exists())
+
     def test_valid_plan_lists_every_term_through_the_target(self):                   # US-09 AC1
         res = self.generate()
         self.assertEqual(res.status_code, 200)
