@@ -103,6 +103,7 @@ export default function GeneratePlan() {
           {busy ? 'Planning…' : result ? 'Generate again' : 'Generate plan'}
         </button>
         <Link to="/profile" className="btn btn-secondary">Edit profile</Link>
+        <Link to="/plans/compare" className="btn btn-secondary">Compare scenarios</Link>
       </div>
 
       {busy && <p role="status" className="plan-muted">This can take up to 10 seconds.</p>}

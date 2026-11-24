@@ -7,6 +7,7 @@ import NavBar from './components/NavBar';
 import Home from './pages/Home';
 import Plans from './pages/Plans';
 import GeneratePlan from './pages/GeneratePlan';
+import ComparePlans from './pages/ComparePlans';
 import Profile from './pages/Profile';
 import Register from './pages/Register';
 import SignIn from './pages/SignIn';
@@ -35,6 +36,7 @@ export function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/plans" element={<Plans />} />
             <Route path="/plans/generate" element={<GeneratePlan />} />
+            <Route path="/plans/compare" element={<ComparePlans />} />
             <Route path="/plans/:planId" element={<Plans />} />
           </Route>
 
