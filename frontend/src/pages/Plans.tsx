@@ -8,6 +8,7 @@ interface SavedPlan {
   id: string;
   name: string;
   created_at: string;
+  is_stale: boolean;
   entries: { term: string; course_code: string; title: string; credits: number;
     counted_for?: string | string[] | null }[];
 }
@@ -47,6 +48,7 @@ export default function Plans() {
           <li key={plan.id}>
             <Link to={`/plans/${plan.id}`}>{plan.name}</Link>
             {' · '}{new Date(plan.created_at).toLocaleDateString()}
+            {plan.is_stale && <span className="plan-stale-label"> · Out of date</span>}
           </li>
         ))}</ul> : <>
           <p>No plans yet</p>
@@ -56,6 +58,12 @@ export default function Plans() {
       )}
       {selected && <>
         <p>Created {new Date(selected.created_at).toLocaleDateString()}</p>
+        {selected.is_stale && (
+          <div role="alert" className="plan-message plan-stale-warning">
+            <p>This plan is out of date because your profile has changed. The saved schedule is shown below.</p>
+            <Link to="/plans/generate">Regenerate from your current profile</Link>
+          </div>
+        )}
         <ExportCsvButton key={selected.id} planId={selected.id} />
         <table className="plan-table">
           <caption>Saved course schedule</caption>

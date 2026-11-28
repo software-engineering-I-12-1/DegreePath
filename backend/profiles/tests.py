@@ -2,7 +2,7 @@ from datetime import date
 from unittest.mock import patch
 
 from rest_framework.test import APIClient, APITestCase
-from catalog.models import Course
+from catalog.models import Course, DegreeProgram
 
 from .models import Profile
 
@@ -52,6 +52,17 @@ class ProfileTests(APITestCase):
         self.assertFalse(data['ready'])
         self.assertEqual(data['profile_version'], 1)
         self.assertTrue(data['updated_at'])
+
+    def test_imported_major_is_available_in_profile(self):
+        DegreeProgram.objects.create(name='Computer Science (BS Demo)', kind='major')
+        DegreeProgram.objects.create(name='Math Minor', kind='minor')
+        client = self.signup()
+        majors = client.get('/api/profiles/options/').json()['majors']
+        self.assertIn('Computer Science (BS Demo)', majors)
+        self.assertNotIn('Math Minor', majors)
+        response = client.put(ME, {**VALID, 'major': 'Computer Science (BS Demo)'}, format='json')
+        self.assertEqual(response.status_code, 200, response.json())
+        self.assertEqual(response.json()['major'], 'Computer Science (BS Demo)')
 
     # AC1
     def test_values_survive_sign_out_and_sign_in(self):

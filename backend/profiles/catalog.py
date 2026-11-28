@@ -1,6 +1,6 @@
 """Course options and code validation backed by the imported catalog."""
 
-from catalog.models import Course
+from catalog.models import Course, DegreeProgram
 
 _STUB_MAJORS = [
     'Computer Science (BS)',
@@ -8,7 +8,8 @@ _STUB_MAJORS = [
 ]
 
 def get_majors():
-    return list(_STUB_MAJORS)
+    imported = DegreeProgram.objects.filter(kind='major').values_list('name', flat=True)
+    return list(dict.fromkeys([*_STUB_MAJORS, *imported]))
 
 
 def get_courses():

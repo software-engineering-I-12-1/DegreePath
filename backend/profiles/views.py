@@ -50,11 +50,12 @@ def _apply_update(request, profile):
         )
 
     has_changes = any(getattr(profile, field) != value for field, value in cleaned.items())
+    if not has_changes:
+        return Response(_serialize(profile))
     with transaction.atomic():
         for field, value in cleaned.items():
             setattr(profile, field, value)
-        if has_changes:
-            profile.profile_version = F('profile_version') + 1
+        profile.profile_version = F('profile_version') + 1
         profile.save()
         profile.refresh_from_db()
     return Response(_serialize(profile))

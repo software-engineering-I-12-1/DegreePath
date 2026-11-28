@@ -20,7 +20,7 @@ class IsStudent(BasePermission):
         return not request.user.is_staff and not request.user.is_superuser
 
 
-def serialize_plan(plan):
+def serialize_plan(plan, profile_version):
     return {
         'id': str(plan.id),
         'name': plan.name,
@@ -28,6 +28,7 @@ def serialize_plan(plan):
         'created_at': plan.created_at.isoformat(),
         'profile_version_at_gen': plan.profile_version_at_gen,
         'catalog_version_at_gen': plan.catalog_version_at_gen,
+        'is_stale': plan.profile_version_at_gen != profile_version,
     }
 
 
@@ -36,7 +37,8 @@ class PlanListView(APIView):
 
     def get(self, request):
         plans = Plan.objects.filter(user=request.user)
-        return Response({'results': [serialize_plan(plan) for plan in plans]})
+        profile_version = Profile.objects.filter(user=request.user).values_list('profile_version', flat=True).first()
+        return Response({'results': [serialize_plan(plan, profile_version) for plan in plans]})
 
     def post(self, request):
         serializer = SavePlanSerializer(data=request.data)
@@ -71,7 +73,7 @@ class PlanListView(APIView):
                 user=request.user, name=serializer.validated_data['name'], entries=snapshot,
                 profile_version_at_gen=profile.profile_version, catalog_version_at_gen=state.catalog_version,
             )
-        return Response(serialize_plan(plan), status=status.HTTP_201_CREATED)
+        return Response(serialize_plan(plan, profile.profile_version), status=status.HTTP_201_CREATED)
 
 
 class PlanDetailView(APIView):
@@ -83,4 +85,5 @@ class PlanDetailView(APIView):
             return api_error('NOT_FOUND', 'Plan not found.', 404)
         if plan.user_id != request.user.pk:
             return api_error('NOT_OWNER', 'You do not have access to this plan.', 403)
-        return Response(serialize_plan(plan))
+        profile_version = Profile.objects.filter(user=request.user).values_list('profile_version', flat=True).first()
+        return Response(serialize_plan(plan, profile_version))
